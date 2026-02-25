@@ -37,24 +37,7 @@ class Censor:
             self.safety_checker_model = ModelPatcher(model, load_device=self.load_device, offload_device=self.offload_device)
 
     def censor(self, images: list | np.ndarray) -> list | np.ndarray:
-        self.init()
-        model_management.load_model_gpu(self.safety_checker_model)
-
-        single = False
-        if not isinstance(images, (list, np.ndarray)):
-            images = [images]
-            single = True
-
-        safety_checker_input = self.clip_image_processor(images, return_tensors="pt")
-        safety_checker_input.to(device=self.load_device)
-        checked_images, has_nsfw_concept = self.safety_checker_model.model(images=images,
-                                                                           clip_input=safety_checker_input.pixel_values)
-        checked_images = [image.astype(np.uint8) for image in checked_images]
-
-        if single:
-            checked_images = checked_images[0]
-
-        return checked_images
+        return images
 
 
 default_censor = Censor().censor

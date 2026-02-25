@@ -762,8 +762,9 @@ with shared.gradio_root:
                                                              value=False)
                         read_wildcards_in_order = gr.Checkbox(label="Read wildcards in order", value=False)
 
-                        black_out_nsfw = gr.Checkbox(label='Black Out NSFW', value=modules.config.default_black_out_nsfw,
-                                                     interactive=not modules.config.default_black_out_nsfw,
+                        black_out_nsfw = gr.Checkbox(label='Black Out NSFW', value=False,
+                                                     interactive=False,
+                                                     visible=False,
                                                      info='Use black image if NSFW is detected.')
 
                         black_out_nsfw.change(lambda x: gr.update(value=x, interactive=not x),
