@@ -48,7 +48,10 @@
         "realisticStockPhoto_v20.safetensors": "https://huggingface.co/lllyasviel/fav_models/resolve/main/fav/realisticStockPhoto_v20.safetensors",
         "realvisxl_v4.0.safetensors": "https://civitai.com/api/download/models/344487",
         "ponyDiffusionV6XL.safetensors": "https://civitai.com/api/download/models/290640",
-        "juggernautXL_v9.safetensors": "https://civitai.com/api/download/models/348913"
+        "juggernautXL_v9.safetensors": "https://civitai.com/api/download/models/348913",
+        "cyberrealisticXL_v31.safetensors": "https://civitai.com/api/download/models/2611295",
+        "epicrealismXL_v11Kiss.safetensors": "https://civitai.com/api/download/models/2514955",
+        "unstableDiffusers_v11.safetensors": "https://civitai.com/api/download/models/309729"
     },
     "embeddings_downloads": {},
     "lora_downloads": {
@@ -61,6 +64,9 @@
         "realisticStockPhoto_v20.safetensors",
         "realvisxl_v4.0.safetensors",
         "ponyDiffusionV6XL.safetensors",
-        "juggernautXL_v9.safetensors"
+        "juggernautXL_v9.safetensors",
+        "cyberrealisticXL_v31.safetensors",
+        "epicrealismXL_v11Kiss.safetensors",
+        "unstableDiffusers_v11.safetensors"
     ]
 }
