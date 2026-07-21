@@ -131,13 +131,25 @@ def build_civitai_manager() -> gr.Blocks:
     return app.queue(concurrency_count=1)
 
 
-def launch_civitai_manager(host: str = "127.0.0.1", port: int = 7866) -> None:
+def launch_civitai_manager(
+    host: str = "127.0.0.1",
+    port: int = 7866,
+    share: bool = False,
+    auth: tuple[str, str] | None = None,
+) -> None:
     app = build_civitai_manager()
-    app.launch(
+    launch_result = app.launch(
         server_name=host,
         server_port=port,
-        prevent_thread_lock=True,
+        share=share,
+        auth=auth,
+        prevent_thread_lock=False,
         show_error=True,
-        quiet=True,
+        quiet=False,
     )
-    print(f"Civitai Manager: http://{host}:{port}")
+    local_url = launch_result[1] if isinstance(launch_result, tuple) and len(launch_result) > 1 else None
+    share_url = launch_result[2] if isinstance(launch_result, tuple) and len(launch_result) > 2 else None
+    if local_url:
+        print(f"Civitai Manager local URL: {local_url}")
+    if share_url:
+        print(f"Civitai Manager public URL: {share_url}")
