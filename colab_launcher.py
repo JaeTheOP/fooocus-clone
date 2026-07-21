@@ -3,13 +3,10 @@ from __future__ import annotations
 import hashlib
 import os
 import pathlib
-import re
-import secrets
 import shlex
 import shutil
 import subprocess
 import sys
-import time
 
 
 ROOT = pathlib.Path(__file__).resolve().parent
@@ -35,7 +32,7 @@ def require_gpu() -> None:
     nvidia_smi = shutil.which("nvidia-smi")
     if not nvidia_smi:
         raise RuntimeError(
-            "No NVIDIA GPU was detected. In Colab choose Runtime > Change runtime type > T4 GPU, then run the cell again."
+            "No NVIDIA GPU was detected. In Colab choose Runtime > Change runtime type > T4 GPU, then run again."
         )
     run([nvidia_smi, "--query-gpu=name,memory.total", "--format=csv,noheader"])
 
@@ -45,10 +42,10 @@ def install_environment() -> None:
     expected_marker = f"{digest}\ntorch=2.3.1\ntorchvision=0.18.1\n"
 
     if PYTHON.exists() and INSTALL_MARKER.exists() and INSTALL_MARKER.read_text() == expected_marker:
-        print("Renewed Fooocus environment is already installed for this runtime.", flush=True)
+        print("Renewed Fooocus is already installed for this runtime.", flush=True)
         return
 
-    print("Installing the isolated Python 3.10 environment...", flush=True)
+    print("Installing Renewed Fooocus in an isolated Python 3.10 environment...", flush=True)
     run([sys.executable, "-m", "pip", "install", "-q", "--upgrade", "uv"])
     uv = shutil.which("uv")
     if not uv:
@@ -58,118 +55,88 @@ def install_environment() -> None:
         shutil.rmtree(ENV_DIR)
 
     run([uv, "venv", "--python", "3.10", "--seed", str(ENV_DIR)])
-    run(
-        [
-            uv,
-            "pip",
-            "install",
-            "--python",
-            str(PYTHON),
-            "--index-url",
-            "https://download.pytorch.org/whl/cu121",
-            "torch==2.3.1",
-            "torchvision==0.18.1",
-        ]
-    )
+    run([
+        uv, "pip", "install", "--python", str(PYTHON),
+        "--index-url", "https://download.pytorch.org/whl/cu121",
+        "torch==2.3.1", "torchvision==0.18.1",
+    ])
     run([uv, "pip", "install", "--python", str(PYTHON), "-r", str(REQUIREMENTS)])
     INSTALL_MARKER.write_text(expected_marker)
-    print("Environment installation complete.", flush=True)
+    print("Installation complete.", flush=True)
 
 
-def configure_storage(child_env: dict[str, str]) -> None:
-    if not env_flag("RF_SAVE_TO_DRIVE", False):
-        print("Using temporary Colab storage. Enable SAVE_TO_GOOGLE_DRIVE to keep models and outputs.", flush=True)
-        return
+def configure_storage(child_env: dict[str, str]) -> tuple[pathlib.Path, pathlib.Path]:
+    if env_flag("RF_SAVE_TO_DRIVE", True):
+        try:
+            from google.colab import drive
+        except ImportError as exc:
+            raise RuntimeError("Google Drive persistence is available only inside Google Colab.") from exc
 
-    try:
-        from google.colab import drive
-    except ImportError as exc:
-        raise RuntimeError("Google Drive persistence is available only inside Google Colab.") from exc
-
-    print("Mounting Google Drive...", flush=True)
-    drive.mount("/content/drive", force_remount=False)
-    persistent = pathlib.Path("/content/drive/MyDrive/Renewed Fooocus")
-
-    paths = {
-        "path_checkpoints": persistent / "models" / "checkpoints",
-        "path_loras": persistent / "models" / "loras",
-        "path_vae": persistent / "models" / "vae",
-        "path_embeddings": persistent / "models" / "embeddings",
-        "path_outputs": persistent / "outputs",
-    }
-    for key, path in paths.items():
-        path.mkdir(parents=True, exist_ok=True)
-        child_env[key] = str(path)
-
-    print(f"Persistent storage: {persistent}", flush=True)
-
-
-def wait_for_share_url(process: subprocess.Popen, log_path: pathlib.Path, timeout_seconds: int = 75) -> str | None:
-    pattern = re.compile(r"https://[a-zA-Z0-9-]+\.gradio\.live")
-    deadline = time.time() + timeout_seconds
-    while time.time() < deadline:
-        time.sleep(1)
-        text = log_path.read_text(errors="ignore") if log_path.exists() else ""
-        match = pattern.search(text)
-        if match:
-            return match.group(0)
-        if process.poll() is not None:
-            print("Civitai Manager stopped during startup. Its log follows:\n", flush=True)
-            print(text[-5000:], flush=True)
-            return None
-    return None
-
-
-def start_civitai_manager(child_env: dict[str, str]) -> subprocess.Popen | None:
-    if not env_flag("RF_START_CIVITAI", True):
-        print("Civitai Manager disabled for this run.", flush=True)
-        return None
-
-    username = os.getenv("RF_CIVITAI_USERNAME", "renewed").strip() or "renewed"
-    password = os.getenv("RF_CIVITAI_PASSWORD", "").strip() or secrets.token_urlsafe(12)
-    manager_env = child_env.copy()
-    manager_env.update(
-        {
-            "FOOOCUS_CIVITAI_HOST": "0.0.0.0",
-            "FOOOCUS_CIVITAI_PORT": "7866",
-            "FOOOCUS_CIVITAI_SHARE": "1",
-            "FOOOCUS_CIVITAI_USERNAME": username,
-            "FOOOCUS_CIVITAI_PASSWORD": password,
-            "PYTHONUNBUFFERED": "1",
+        print("Mounting Google Drive...", flush=True)
+        drive.mount("/content/drive", force_remount=False)
+        persistent = pathlib.Path("/content/drive/MyDrive/Renewed Fooocus")
+        checkpoints = persistent / "models" / "checkpoints"
+        loras = persistent / "models" / "loras"
+        paths = {
+            "path_checkpoints": checkpoints,
+            "path_loras": loras,
+            "path_vae": persistent / "models" / "vae",
+            "path_embeddings": persistent / "models" / "embeddings",
+            "path_outputs": persistent / "outputs",
         }
-    )
+        for key, path in paths.items():
+            path.mkdir(parents=True, exist_ok=True)
+            child_env[key] = str(path)
+        print(f"Persistent storage: {persistent}", flush=True)
+        return checkpoints, loras
 
-    log_path = ROOT / "civitai_manager.log"
-    log_handle = log_path.open("w")
-    process = subprocess.Popen(
-        [str(PYTHON), "civitai_manager.py"],
-        cwd=ROOT,
-        env=manager_env,
-        stdout=log_handle,
-        stderr=subprocess.STDOUT,
-    )
-    process._renewed_log_handle = log_handle  # type: ignore[attr-defined]
+    checkpoints = ROOT / "models" / "checkpoints"
+    loras = ROOT / "models" / "loras"
+    checkpoints.mkdir(parents=True, exist_ok=True)
+    loras.mkdir(parents=True, exist_ok=True)
+    print("Using temporary Colab storage.", flush=True)
+    return checkpoints, loras
 
-    public_url = wait_for_share_url(process, log_path)
-    print("\n" + "=" * 72, flush=True)
-    if public_url:
-        print(f"CIVITAI MANAGER: {public_url}", flush=True)
-        print(f"USERNAME: {username}", flush=True)
-        print(f"PASSWORD: {password}", flush=True)
-    else:
-        print(f"Civitai Manager did not produce a public link. Fooocus will still start. Log: {log_path}", flush=True)
-    print("=" * 72 + "\n", flush=True)
-    return process
+
+def split_references(value: str) -> list[str]:
+    return [item.strip() for item in value.replace("\n", ",").split(",") if item.strip()]
+
+
+def install_civitai_assets(child_env: dict[str, str], checkpoints: pathlib.Path, loras: pathlib.Path) -> None:
+    token = os.getenv("RF_CIVITAI_TOKEN", "").strip()
+    download_env = child_env.copy()
+    if token:
+        download_env["CIVITAI_API_TOKEN"] = token
+
+    groups = [
+        ("Checkpoint", checkpoints, split_references(os.getenv("RF_CIVITAI_CHECKPOINTS", ""))),
+        ("LORA", loras, split_references(os.getenv("RF_CIVITAI_LORAS", ""))),
+    ]
+
+    for model_type, destination, references in groups:
+        if not references:
+            continue
+        command = [
+            str(PYTHON), "-m", "modules.civitai_client",
+            "--type", model_type,
+            "--destination", str(destination),
+        ]
+        for reference in references:
+            command.extend(["--reference", reference])
+        run(command, cwd=ROOT, env=download_env)
 
 
 def launch_fooocus(child_env: dict[str, str]) -> None:
     preset = os.getenv("RF_PRESET", "realistic").strip()
     command = [str(PYTHON), "launch.py", "--share", "--always-high-vram"]
-    if preset:
+    if preset and preset != "default":
         command.extend(["--preset", preset])
 
-    print("Starting Renewed Fooocus. The first run downloads one SDXL checkpoint and may take several minutes.", flush=True)
-    print("Open the gradio.live URL shown below when startup completes.\n", flush=True)
+    print("\n" + "=" * 72, flush=True)
+    print("Renewed Fooocus is starting.", flush=True)
+    print("Open the gradio.live URL printed below when startup finishes.", flush=True)
+    print("Keep this Colab cell running while using the app.", flush=True)
+    print("=" * 72 + "\n", flush=True)
     run(command, cwd=ROOT, env=child_env)
 
 
@@ -177,24 +144,15 @@ def main() -> None:
     require_gpu()
     free_gb = shutil.disk_usage("/content").free / 1024**3
     print(f"Free Colab storage: {free_gb:.1f} GB", flush=True)
-    if free_gb < 15:
-        raise RuntimeError("Less than 15 GB of free Colab storage is available. Restart the runtime or remove large files.")
+    if free_gb < 12:
+        raise RuntimeError("Less than 12 GB of free Colab storage is available. Restart the runtime or remove files.")
 
     install_environment()
     child_env = os.environ.copy()
     child_env["PYTHONUNBUFFERED"] = "1"
-    configure_storage(child_env)
-    manager = start_civitai_manager(child_env)
-
-    try:
-        launch_fooocus(child_env)
-    finally:
-        if manager and manager.poll() is None:
-            manager.terminate()
-        if manager:
-            log_handle = getattr(manager, "_renewed_log_handle", None)
-            if log_handle:
-                log_handle.close()
+    checkpoints, loras = configure_storage(child_env)
+    install_civitai_assets(child_env, checkpoints, loras)
+    launch_fooocus(child_env)
 
 
 if __name__ == "__main__":
