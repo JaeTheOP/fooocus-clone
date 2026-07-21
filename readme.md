@@ -2,7 +2,7 @@
 
 # Renewed Fooocus
 
-### One-click Google Colab image generation with direct Civitai model management
+### One-cell Google Colab image generation with direct Civitai model downloads
 
 [![Open in Google Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JaeTheOP/fooocus-clone/blob/agent/civitai-model-manager/colab.ipynb)
 [![Based on Fooocus](https://img.shields.io/badge/based%20on-Fooocus-5b6cff)](https://github.com/lllyasviel/Fooocus)
@@ -16,22 +16,22 @@
 
 ## What is Renewed Fooocus?
 
-**Renewed Fooocus** is an independent community continuation of the original [Fooocus](https://github.com/lllyasviel/Fooocus) image-generation interface.
+**Renewed Fooocus** is an independent community continuation of the original [Fooocus](https://github.com/lllyasviel/Fooocus) SDXL image-generation interface.
 
-It retains the familiar Fooocus SDXL workflow while adding:
+It preserves the familiar Fooocus workflow while adding:
 
-- A single-cell Google Colab launcher
-- An isolated Python 3.10 environment that does not replace Colab's system Python
-- Optional Google Drive persistence
-- Direct Civitai checkpoint and LoRA search
-- Specific model-version selection
+- A one-cell Google Colab launcher
+- A managed Python 3.10 environment that does not replace Colab's system Python
+- A startup smoke test for Python, PyTorch, CUDA, Gradio, OpenCV, HTTPX, and NumPy
+- Optional Google Drive persistence for models and outputs
+- Direct Civitai checkpoint and LoRA installation from exact version URLs or IDs
 - Automatic installation into the correct model folders
-- A password-protected public Civitai Manager
+- A separate local Civitai search-and-install manager for desktop or server use
 - Renewed Fooocus branding in the browser and companion tools
 
 > **Independent fork:** Renewed Fooocus is not the official Fooocus project and is not affiliated with Civitai. Upstream attribution is provided below.
 
-## One-click Google Colab
+## Verified one-cell Google Colab
 
 [![Open in Google Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/JaeTheOP/fooocus-clone/blob/agent/civitai-model-manager/colab.ipynb)
 
@@ -41,44 +41,79 @@ It retains the familiar Fooocus SDXL workflow while adding:
 2. Choose **Runtime → Change runtime type**.
 3. Select **T4 GPU** or another available NVIDIA GPU.
 4. Optionally enable **SAVE_TO_GOOGLE_DRIVE**.
-5. Leave **START_CIVITAI_MANAGER** enabled to use direct Civitai downloads.
+5. Optionally enter exact Civitai checkpoint or LoRA version URLs or numeric version IDs.
 6. Run the single **▶ Run Renewed Fooocus** cell.
 
-The cell handles the complete process:
+The cell performs the complete startup process:
 
-- Verifies that a GPU is available
+- Retries the repository clone if GitHub has a transient connection failure
+- Prints the exact Renewed Fooocus commit being run
+- Verifies that an NVIDIA GPU is available
 - Checks available Colab storage
-- Clones the current Renewed Fooocus branch
 - Installs `uv`
-- Creates a managed Python 3.10 virtual environment
-- Installs the CUDA PyTorch build and pinned dependencies
-- Optionally mounts Google Drive
-- Starts the authenticated Civitai Manager
-- Launches Renewed Fooocus
+- Downloads a managed Python 3.10 build
+- Creates an isolated virtual environment
+- Installs the official PyTorch 2.3.1 CUDA 12.1 wheels and pinned dependencies
+- Verifies that PyTorch can access the allocated GPU
+- Optionally mounts and verifies writable Google Drive folders
+- Installs requested Civitai assets before launch
+- Stops with a clear error when a required startup check or requested download fails
+- Launches one Renewed Fooocus `gradio.live` interface
 
-Keep the cell running while using Renewed Fooocus. Stopping the cell shuts down the public interfaces.
+Keep the cell running while using Renewed Fooocus. Stopping the cell shuts down the temporary public interface.
 
-### Links printed by Colab
+### Successful startup output
 
-The launcher prints two separate links:
+Before the interface launches, the notebook prints information similar to:
 
 ```text
-CIVITAI MANAGER: https://....gradio.live
-USERNAME: renewed
-PASSWORD: generated-password
+NVIDIA T4, 15360 MiB, <driver version>
+Python: 3.10.x
+PyTorch: 2.3.1+cu121
+Torchvision: 0.18.1+cu121
+CUDA available: True
+GPU: Tesla T4
+Gradio: 3.41.2
 ```
 
-Renewed Fooocus then prints its own separate `gradio.live` URL. Open that second URL to generate images.
+Renewed Fooocus then prints a temporary URL similar to:
+
+```text
+https://example.gradio.live
+```
+
+Open that URL in a new tab. Gradio share URLs expire when the Colab process or runtime stops.
 
 ### First startup
 
-The default Colab preset is `realistic`. It downloads one SDXL checkpoint and one lightweight LoRA on first launch.
+The default Colab preset is `realistic`. On the first launch, the notebook installs the Python environment and Fooocus downloads the assets required by the selected preset. Later reruns in the same active runtime reuse the validated Python environment.
 
-The older notebook used the `photoreal_civitai` preset, which attempted to download several complete checkpoints at startup. That behavior has been removed from the default Colab workflow because it could exhaust storage or make startup appear frozen.
+Leave the Civitai fields empty for the fastest first launch. Add custom checkpoints or LoRAs after confirming that the default interface starts correctly.
 
-### Google Drive persistence
+## Direct Civitai downloads in Colab
 
-Enable `SAVE_TO_GOOGLE_DRIVE` in the single Colab cell to store files under:
+The one-cell notebook accepts:
+
+- An exact Civitai model URL containing `modelVersionId=...`
+- A Civitai API download URL
+- A numeric Civitai model-version ID
+- Multiple references separated by commas or line breaks
+
+Example checkpoint field:
+
+```text
+https://civitai.com/models/123/model-name?modelVersionId=456, 789
+```
+
+Put checkpoint versions in **CIVITAI_CHECKPOINTS** and LoRA versions in **CIVITAI_LORAS**. The launcher verifies that the resolved asset type matches the field where it was entered.
+
+An API token is only needed for account-restricted or gated Civitai downloads. The notebook passes the token to the child process and does not intentionally write it to the repository or Google Drive.
+
+Requested Civitai downloads are treated as required. When one fails, startup stops and reports which reference failed instead of silently opening Fooocus without the requested model.
+
+## Google Drive persistence
+
+Enable `SAVE_TO_GOOGLE_DRIVE` to store files under:
 
 ```text
 MyDrive/Renewed Fooocus/
@@ -90,42 +125,24 @@ MyDrive/Renewed Fooocus/
 └── outputs/
 ```
 
-When Drive persistence is disabled, models and outputs are deleted when the Colab runtime is reset.
+The launcher creates each directory, verifies that it is writable, and exports it through Fooocus's supported path environment variables.
 
-## Using the Civitai Manager
-
-The companion manager can:
-
-- Search Civitai checkpoints and LoRAs
-- Sort by downloads, rating, or newest release
-- Select an exact model version
-- Default to SDXL-family assets compatible with Fooocus
-- Display architecture, file size, compatibility, and trigger words
-- Install files into the configured checkpoint or LoRA folder
-- Use an optional Civitai API token for account-restricted assets
-
-After installing a model:
-
-1. Open Renewed Fooocus.
-2. Enable **Advanced**.
-3. Open **Models**.
-4. Click **Refresh All Files**.
-5. Select the new checkpoint or LoRA.
+When Drive persistence is disabled, models and outputs stored under `/content` disappear when the Colab runtime is deleted or reset.
 
 ## Model download protections
 
 The Civitai downloader:
 
-- Accepts `.safetensors` model files
+- Accepts `.safetensors` checkpoint and LoRA files
 - Rejects failed Civitai virus or pickle scan results
-- Validates filenames and destination paths
-- Uses temporary `.part` downloads and atomic replacement
+- Validates download hosts, filenames, and destination paths
+- Uses temporary `.part` files and atomic replacement
 - Enforces a configurable maximum download size
-- Verifies SHA-256 when a full hash is supplied
+- Verifies SHA-256 when Civitai supplies a full hash
 - Writes a `.civitai.json` metadata sidecar
 - Keeps the optional API token in memory
 
-The default maximum download size is 12 GB. It can be changed with:
+The default maximum download size is 12 GB. For local use it can be changed with:
 
 ```bash
 FOOOCUS_CIVITAI_MAX_GB=20 python civitai_manager.py
@@ -139,7 +156,7 @@ FOOOCUS_CIVITAI_MAX_GB=20 python civitai_manager.py
 - Git
 - An NVIDIA GPU is recommended
 - At least 4 GB VRAM for basic use
-- Enough storage for SDXL checkpoints
+- Enough storage for SDXL checkpoints and outputs
 
 ### Linux or macOS
 
@@ -149,8 +166,9 @@ cd renewed-fooocus
 python3.10 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
+pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu121
 pip install -r requirements_versions.txt
-python entry_with_update.py
+python launch.py
 ```
 
 ### Windows
@@ -161,13 +179,16 @@ cd renewed-fooocus
 py -3.10 -m venv .venv
 .venv\Scripts\activate
 python -m pip install --upgrade pip
+pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu121
 pip install -r requirements_versions.txt
-python entry_with_update.py
+python launch.py
 ```
 
-PyTorch installation may need to be adjusted for the CUDA version supported by the local machine.
+The correct PyTorch command may differ for local GPUs and drivers. Use the official PyTorch installation selector when CUDA 12.1 is not appropriate for the machine.
 
-## Run the Civitai Manager locally
+## Run the local Civitai Manager
+
+The separate search interface remains available for local installations:
 
 ```bash
 python civitai_manager.py
@@ -190,6 +211,18 @@ python civitai_manager.py
 
 Do not expose the manager publicly without authentication. Anyone with access could initiate large downloads into the environment.
 
+## Automated validation
+
+The repository includes a GitHub Actions workflow that:
+
+- Compiles the Colab launcher and Civitai modules
+- Parses the notebook as valid notebook JSON
+- Compiles every Colab code cell with Python's AST parser
+- Runs the Civitai client unit tests
+- Runs the Colab launcher storage, input-parsing, and launch-command tests
+
+These checks catch syntax, notebook-format, path-export, command-construction, and Civitai parsing regressions. A true end-to-end GPU launch still requires a Google Colab GPU runtime because GitHub's standard CI runners do not provide the same NVIDIA environment.
+
 ## Core capabilities retained
 
 Renewed Fooocus retains the primary workflows from upstream Fooocus:
@@ -207,37 +240,39 @@ Renewed Fooocus retains the primary workflows from upstream Fooocus:
 
 ## Compatibility
 
-Renewed Fooocus is primarily designed for the **SDXL model family**. The Civitai Manager defaults to assets likely to work with this pipeline.
-
-An all-architectures download mode may show other model families, but downloading a file does not make it compatible with Renewed Fooocus. Flux, SD 1.5, Stable Cascade, and other architectures may require different software.
+Renewed Fooocus is primarily designed for the **SDXL model family**. Downloading a model does not make an incompatible architecture usable by Fooocus. Flux, SD 1.5, Stable Cascade, and other architectures may require different software.
 
 Review each model's license and usage terms before use or redistribution.
 
 ## Troubleshooting
 
-### Colab says no GPU was detected
+### No GPU was detected
 
-Choose **Runtime → Change runtime type → T4 GPU**, save the setting, and rerun the cell.
+Choose **Runtime → Change runtime type → T4 GPU**, save the setting, and rerun the cell. The launcher intentionally refuses to proceed on a CPU-only runtime.
 
-### Colab has less than 15 GB free
+### The CUDA smoke test failed
 
-Select **Runtime → Disconnect and delete runtime**, reconnect with a GPU, and run the notebook again. Remove large files from `/content` when reusing a session.
+Choose **Runtime → Disconnect and delete runtime**, reconnect with a GPU, and rerun the notebook. The launcher rebuilds the managed Python environment when its validation marker or imports are invalid.
+
+### Less than 12 GB of free Colab storage is available
+
+Select **Runtime → Disconnect and delete runtime**, reconnect, and rerun the notebook. Remove large files from `/content` when reusing a session.
 
 ### The first startup takes a while
 
-The first launch installs dependencies and downloads an SDXL checkpoint. Later reruns in the same active runtime reuse the installed Python environment, although the notebook reclones the small source repository.
+The first run installs the CUDA Python environment and downloads the selected preset assets. Later reruns in the same active runtime reuse the validated environment.
 
 ### A model does not appear
 
 Open **Advanced → Models → Refresh All Files**. Confirm that the asset is an SDXL-compatible `.safetensors` checkpoint or LoRA.
 
-### Civitai requires an account
+### A Civitai download failed
 
-Create a Civitai API token in your account settings and paste it into the optional token field. The manager does not intentionally save it.
+Confirm that the value is an exact model-version URL or numeric version ID, that the asset type matches the field, and that an API token is supplied when the download requires an account.
 
 ### A public Gradio URL is not created
 
-Gradio share links depend on outbound network access and are temporary. Inspect the cell output for the exact error. Renewed Fooocus and the Civitai Manager use separate public links.
+Gradio share links depend on outbound network access and are temporary. Read the final error block printed in the cell output. The launcher now stops on failed environment validation rather than opening a partially working session.
 
 ## Upstream and licensing
 
