@@ -1,65 +1,116 @@
-# Fooocus Civitai Manager
+# Renewed Fooocus Civitai Manager
 
-This branch adds a standalone Civitai browser and installer for Fooocus checkpoints and LoRAs.
+Renewed Fooocus includes a standalone Gradio interface for searching and installing Civitai checkpoints and LoRAs.
 
-## Google Colab
+The manager is intended primarily for local or server installations. The restored Google Colab notebook uses the original three-cell workflow and includes commented manual `wget` examples instead of starting this manager automatically.
 
-Open `colab.ipynb` in Google Colab and run the cells in order with a GPU runtime.
+## Start the manager
 
-The notebook:
-
-- creates an isolated Python 3.10 environment so Fooocus does not conflict with Colab's current system Python;
-- installs the CUDA 12.1 PyTorch build and Fooocus dependencies;
-- optionally mounts Google Drive and persists checkpoints, LoRAs, VAEs, embeddings, and outputs;
-- starts the Civitai Manager with a temporary username and password;
-- creates separate public Gradio links for the Civitai Manager and Fooocus;
-- launches Fooocus with the selected preset.
-
-The notebook currently checks out the `agent/civitai-model-manager` branch. After the pull request is merged, change `BRANCH` in the first notebook cell to `main`.
-
-## Local run
-
-Install Fooocus normally, then start the manager from the repository root:
+From the repository root:
 
 ```bash
 python civitai_manager.py
 ```
 
-Open `http://127.0.0.1:7866` while Fooocus is running on its normal port.
+Default address:
 
-Environment overrides:
-
-```bash
-FOOOCUS_CIVITAI_HOST=0.0.0.0 \
-FOOOCUS_CIVITAI_PORT=7866 \
-FOOOCUS_CIVITAI_SHARE=1 \
-FOOOCUS_CIVITAI_USERNAME=fooocus \
-FOOOCUS_CIVITAI_PASSWORD='change-me' \
-python civitai_manager.py
+```text
+http://127.0.0.1:7866
 ```
 
-Do not expose the manager publicly without authentication. The maximum accepted download size defaults to 12 GB and can be changed with:
+## Search and installation
+
+The manager can:
+
+- Search Civitai for checkpoints or LoRAs
+- Sort by most downloaded, highest rated, or newest
+- Select a specific model version
+- Default to likely Fooocus-compatible SDXL-family assets
+- Display the base architecture, file size, compatibility, and trigger words
+- Install checkpoints into the configured checkpoint folder
+- Install LoRAs into the configured LoRA folder
+- Refresh Fooocus's internal model index after installation
+- Use an optional Civitai API token for account-restricted downloads
+
+After installing a model, open Renewed Fooocus and use **Advanced → Models → Refresh All Files** before selecting the new asset.
+
+## Download protections
+
+The downloader:
+
+- Accepts `.safetensors` files
+- Rejects failed Civitai virus or pickle scan results
+- Validates filenames and destination paths
+- Restricts model downloads to expected Civitai hosts
+- Downloads to a temporary `.part` file before atomic replacement
+- Enforces a maximum download size
+- Verifies SHA-256 when Civitai provides a complete hash
+- Writes a `.civitai.json` metadata sidecar
+- Does not intentionally write the optional API token to disk
+
+The default maximum download size is 12 GB. Change it with:
 
 ```bash
 FOOOCUS_CIVITAI_MAX_GB=20 python civitai_manager.py
 ```
 
-## Features
+## Network access
 
-- Searches Civitai checkpoints and LoRAs.
-- Selects a specific model version rather than only a model page.
-- Defaults to SDXL-family assets compatible with Fooocus.
-- Offers an all-architectures mode for downloading files for other tools.
-- Installs checkpoints into the configured checkpoint path.
-- Installs LoRAs into the configured LoRA path.
-- Accepts only `.safetensors` files.
-- Rejects files whose Civitai virus or pickle scan reports danger/error.
-- Verifies SHA-256 when Civitai supplies a full SHA-256 hash.
-- Uses temporary `.part` files and atomic replacement.
-- Writes a sidecar `.civitai.json` metadata file.
-- Keeps the optional Civitai API token in memory only.
+Listen on all network interfaces:
 
-After installation, click **Refresh All Files** in Fooocus's Models tab to refresh the visible model and LoRA dropdowns.
+```bash
+FOOOCUS_CIVITAI_HOST=0.0.0.0 python civitai_manager.py
+```
+
+Change the port:
+
+```bash
+FOOOCUS_CIVITAI_PORT=7867 python civitai_manager.py
+```
+
+Create a temporary public Gradio link:
+
+```bash
+FOOOCUS_CIVITAI_SHARE=1 python civitai_manager.py
+```
+
+Protect a public link with authentication:
+
+```bash
+FOOOCUS_CIVITAI_SHARE=1 \
+FOOOCUS_CIVITAI_USERNAME=renewed \
+FOOOCUS_CIVITAI_PASSWORD='replace-this-password' \
+python civitai_manager.py
+```
+
+Do not expose the manager publicly without authentication. Anyone with access may be able to start large model downloads into the configured environment.
+
+## Environment variables
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `FOOOCUS_CIVITAI_HOST` | `127.0.0.1` | Gradio server host |
+| `FOOOCUS_CIVITAI_PORT` | `7866` | Gradio server port |
+| `FOOOCUS_CIVITAI_SHARE` | disabled | Creates a temporary Gradio share URL |
+| `FOOOCUS_CIVITAI_USERNAME` | empty | Optional Gradio username |
+| `FOOOCUS_CIVITAI_PASSWORD` | empty | Optional Gradio password |
+| `FOOOCUS_CIVITAI_MAX_GB` | `12` | Maximum permitted model download size |
+
+## Compatibility
+
+Renewed Fooocus is primarily designed for the SDXL model family. The manager can expose additional architectures in download-only mode, but downloading an asset does not guarantee that Fooocus can load it.
+
+Flux, SD 1.5, Stable Cascade, and other architectures may require different software or pipelines.
+
+## Google Colab
+
+The repository's `colab.ipynb` has been restored to its original three-cell structure:
+
+1. Install dependencies and clone the repository.
+2. Optionally download custom Civitai files using commented `wget` examples.
+3. Launch Fooocus with the `photoreal_civitai` preset.
+
+The original notebook does not automatically run the Civitai Manager, generate manager credentials, or mount Google Drive.
 
 ## Scope
 
