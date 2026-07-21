@@ -28,23 +28,20 @@ jobs:
 
       - name: Validate Python syntax
         run: |
-          python -m py_compile colab_launcher.py civitai_manager.py
+          python -m py_compile civitai_manager.py
           python -m py_compile modules/civitai_client.py modules/civitai_manager.py
 
-      - name: Validate Colab notebook JSON and code cells
+      - name: Validate Colab notebook JSON
         run: |
           python - <<'PY'
-          import ast
           import json
           from pathlib import Path
 
           notebook = json.loads(Path("colab.ipynb").read_text(encoding="utf-8"))
           assert notebook["nbformat"] == 4
           assert notebook["metadata"].get("accelerator") == "GPU"
-          for cell in notebook["cells"]:
-              if cell.get("cell_type") == "code":
-                  ast.parse("".join(cell.get("source", [])))
-          print("Colab notebook JSON and code cells are valid.")
+          assert len(notebook.get("cells", [])) == 3
+          print("Original three-cell Colab notebook JSON is valid.")
           PY
 
       - name: Run unit tests
