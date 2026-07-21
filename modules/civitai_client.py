@@ -7,7 +7,7 @@ import re
 import tempfile
 from pathlib import Path
 from typing import Any, Iterable
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 import httpx
 
@@ -27,7 +27,7 @@ class CivitaiError(RuntimeError):
 def _headers(api_token: str | None = None) -> dict[str, str]:
     headers = {
         "Accept": "application/json",
-        "User-Agent": "Fooocus-Civitai-Manager/1.0",
+        "User-Agent": "Renewed-Fooocus-Civitai-Manager/1.0",
     }
     token = (api_token or "").strip()
     if token:
@@ -146,6 +146,87 @@ def search_models(
     return results[:100]
 
 
+def extract_version_id(reference: str | int) -> int:
+    """Extract a Civitai model-version ID from a number or supported Civitai URL."""
+    value = str(reference).strip()
+    if value.isdigit():
+        return int(value)
+
+    parsed = urlparse(value)
+    hostname = (parsed.hostname or "").lower()
+    if parsed.scheme != "https" or hostname not in DOWNLOAD_HOSTS:
+        raise CivitaiError("Use a Civitai model-version URL or numeric version ID.")
+
+    query = parse_qs(parsed.query)
+    for key, values in query.items():
+        if key.lower() == "modelversionid" and values and str(values[0]).isdigit():
+            return int(values[0])
+
+    for pattern in (r"/api/download/models/(\d+)", r"/api/v1/model-versions/(\d+)"):
+        match = re.search(pattern, parsed.path, re.IGNORECASE)
+        if match:
+            return int(match.group(1))
+
+    raise CivitaiError(
+        "The Civitai reference does not include a modelVersionId. "
+        "Open the desired version and copy its download URL or version ID."
+    )
+
+
+def get_model_version(reference: str | int, api_token: str | None = None) -> dict[str, Any]:
+    """Resolve one Civitai model version into a downloadable manager record."""
+    version_id = extract_version_id(reference)
+    try:
+        with httpx.Client(timeout=httpx.Timeout(30.0, connect=10.0), follow_redirects=True) as client:
+            response = client.get(f"{API_BASE}/model-versions/{version_id}", headers=_headers(api_token))
+            response.raise_for_status()
+            version = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise CivitaiError(f"Could not resolve Civitai version {version_id}: {exc}") from exc
+
+    model = version.get("model") or {}
+    model_type = str(model.get("type") or "")
+    if model_type not in SUPPORTED_TYPES:
+        raise CivitaiError(f"Civitai version {version_id} is not a checkpoint or LoRA.")
+    if bool(model.get("nsfw")):
+        raise CivitaiError("This manager does not install models marked NSFW.")
+
+    safe_file = _choose_safe_file(version)
+    if safe_file is None:
+        raise CivitaiError("No acceptable .safetensors file was found for this model version.")
+
+    model_id = int(version.get("modelId") or model.get("id") or 0)
+    base_model = str(version.get("baseModel") or "Unknown")
+    download_url = (
+        safe_file.get("downloadUrl")
+        or version.get("downloadUrl")
+        or f"https://civitai.com/api/download/models/{version_id}"
+    )
+
+    return {
+        "model_id": model_id,
+        "model_name": str(model.get("name") or f"Model {model_id or version_id}"),
+        "model_type": model_type,
+        "version_id": version_id,
+        "version_name": str(version.get("name") or f"Version {version_id}"),
+        "base_model": base_model,
+        "fooocus_compatible": _is_fooocus_family(base_model),
+        "trained_words": list(version.get("trainedWords") or []),
+        "download_url": str(download_url),
+        "file_id": safe_file.get("id"),
+        "file_name": str(safe_file.get("name") or f"civitai-{version_id}.safetensors"),
+        "size_kb": float(safe_file.get("sizeKB") or safe_file.get("sizeKb") or 0),
+        "hashes": dict(safe_file.get("hashes") or {}),
+        "virus_scan": safe_file.get("virusScanResult"),
+        "pickle_scan": safe_file.get("pickleScanResult"),
+        "model_url": (
+            f"https://civitai.com/models/{model_id}?modelVersionId={version_id}"
+            if model_id
+            else f"https://civitai.com/api/v1/model-versions/{version_id}"
+        ),
+    }
+
+
 def _safe_filename(filename: str) -> str:
     filename = os.path.basename(filename.strip().replace("\\", "/"))
     filename = re.sub(r"[^A-Za-z0-9._()\- ]+", "_", filename).strip(" .")
@@ -161,7 +242,7 @@ def _filename_from_disposition(header: str | None, fallback: str) -> str:
         return _safe_filename(fallback)
     match = re.search(r"filename\*=UTF-8''([^;]+)|filename=\"?([^\";]+)", header, re.IGNORECASE)
     selected = (match.group(1) or match.group(2)) if match else fallback
-    return _safe_filename(selected)
+    return _safe_filename(unquote(selected))
 
 
 def _validate_download_url(url: str) -> None:
@@ -271,3 +352,76 @@ def download_model(
                 temp_path.unlink(missing_ok=True)
             except OSError:
                 pass
+
+
+def install_reference(
+    reference: str | int,
+    destination_dir: str,
+    expected_type: str | None = None,
+    api_token: str | None = None,
+    overwrite: bool = False,
+    max_download_gb: float | None = None,
+) -> dict[str, Any]:
+    """Resolve and install a Civitai version reference in one call."""
+    record = get_model_version(reference, api_token=api_token)
+    if expected_type and record["model_type"] != expected_type:
+        raise CivitaiError(
+            f"The selected Civitai item is {record['model_type']}, not the requested {expected_type}."
+        )
+    result = download_model(
+        record=record,
+        destination_dir=destination_dir,
+        api_token=api_token,
+        overwrite=overwrite,
+        max_download_gb=max_download_gb,
+    )
+    return {"record": record, **result}
+
+
+def _command_line() -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Install Civitai assets for Renewed Fooocus.")
+    parser.add_argument("--type", dest="model_type", choices=sorted(SUPPORTED_TYPES), required=True)
+    parser.add_argument("--destination", required=True)
+    parser.add_argument("--reference", action="append", default=[])
+    parser.add_argument("--overwrite", action="store_true")
+    parser.add_argument("--max-gb", type=float, default=None)
+    args = parser.parse_args()
+
+    token = os.getenv("CIVITAI_API_TOKEN", "").strip() or None
+    failures = 0
+    for reference in args.reference:
+        print(f"[Civitai] Resolving {args.model_type}: {reference}", flush=True)
+        try:
+            result = install_reference(
+                reference=reference,
+                destination_dir=args.destination,
+                expected_type=args.model_type,
+                api_token=token,
+                overwrite=args.overwrite,
+                max_download_gb=args.max_gb,
+            )
+        except CivitaiError as exc:
+            failures += 1
+            print(f"[Civitai] Skipped: {exc}", flush=True)
+            continue
+
+        record = result["record"]
+        size_gb = result["bytes"] / 1024**3
+        print(
+            f"[Civitai] Installed {record['model_name']} — {record['version_name']} "
+            f"as {Path(result['path']).name} ({size_gb:.2f} GB)",
+            flush=True,
+        )
+        words = ", ".join(record.get("trained_words") or [])
+        if words:
+            print(f"[Civitai] Trigger words: {words}", flush=True)
+
+    if failures:
+        print(f"[Civitai] {failures} requested asset(s) could not be installed.", flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_command_line())
