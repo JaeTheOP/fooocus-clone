@@ -1,6 +1,7 @@
 # based on https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.6.0/modules/ui_gradio_extensions.py
 
 import os
+import re
 import gradio as gr
 import args_manager
 
@@ -8,7 +9,6 @@ from modules.localization import localization_js
 
 
 GradioTemplateResponseOriginal = gr.routes.templates.TemplateResponse
-
 modules_path = os.path.dirname(os.path.realpath(__file__))
 script_path = os.path.dirname(modules_path)
 
@@ -40,9 +40,10 @@ def javascript_html():
     head += f'<script type="text/javascript" src="{viewer_js_path}"></script>\n'
     head += f'<script type="text/javascript" src="{image_viewer_js_path}"></script>\n'
     head += f'<meta name="samples-path" content="{samples_path}">\n'
+    head += '<meta name="application-name" content="Renewed Fooocus">\n'
 
     if args_manager.args.theme:
-        head += f'<script type="text/javascript">set_theme(\"{args_manager.args.theme}\");</script>\n'
+        head += f'<script type="text/javascript">set_theme("{args_manager.args.theme}");</script>\n'
 
     return head
 
@@ -59,8 +60,15 @@ def reload_javascript():
 
     def template_response(*args, **kwargs):
         res = GradioTemplateResponseOriginal(*args, **kwargs)
-        res.body = res.body.replace(b'</head>', f'{js}</head>'.encode("utf8"))
-        res.body = res.body.replace(b'</body>', f'{css}</body>'.encode("utf8"))
+        res.body = re.sub(
+            br'<title>.*?</title>',
+            b'<title>Renewed Fooocus</title>',
+            res.body,
+            count=1,
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+        res.body = res.body.replace(b'</head>', f'{js}</head>'.encode('utf8'))
+        res.body = res.body.replace(b'</body>', f'{css}</body>'.encode('utf8'))
         res.init_headers()
         return res
 
