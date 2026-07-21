@@ -11,7 +11,7 @@ from modules.civitai_client import CivitaiError, download_model, search_models
 
 
 COMPATIBILITY_CHOICES = [
-    "Fooocus-compatible (SDXL family)",
+    "Renewed Fooocus-compatible (SDXL family)",
     "All architectures (download only)",
 ]
 
@@ -72,15 +72,15 @@ def _download_ui(selection, records, api_token, overwrite):
         f"**Base architecture:** {html.escape(record['base_model'])}  \n"
         f"**Trigger words:** {html.escape(trained_words)}  \n"
         f"**SHA-256:** `{result['sha256']}`  \n\n"
-        "Fooocus's file index is refreshed. In the main Fooocus window, click **Refresh All Files** "
-        "to update the visible dropdown choices."
+        "Renewed Fooocus's file index is refreshed. In the main Renewed Fooocus window, click "
+        "**Refresh All Files** to update the visible dropdown choices."
     )
 
 
 def build_civitai_manager() -> gr.Blocks:
-    with gr.Blocks(title="Fooocus Civitai Manager") as app:
+    with gr.Blocks(title="Renewed Fooocus Civitai Manager") as app:
         gr.Markdown(
-            "# Fooocus Civitai Manager\n"
+            "# Renewed Fooocus Civitai Manager\n"
             "Search and install Civitai checkpoints or LoRAs without manually copying URLs. "
             "The manager accepts only `.safetensors`, rejects failed malware scans, verifies SHA-256 when provided, "
             "and does not save your API token."
@@ -150,6 +150,6 @@ def launch_civitai_manager(
     local_url = launch_result[1] if isinstance(launch_result, tuple) and len(launch_result) > 1 else None
     share_url = launch_result[2] if isinstance(launch_result, tuple) and len(launch_result) > 2 else None
     if local_url:
-        print(f"Civitai Manager local URL: {local_url}")
+        print(f"Renewed Fooocus Civitai Manager local URL: {local_url}")
     if share_url:
-        print(f"Civitai Manager public URL: {share_url}")
+        print(f"Renewed Fooocus Civitai Manager public URL: {share_url}")
