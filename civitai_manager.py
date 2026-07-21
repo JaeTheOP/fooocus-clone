@@ -1,6 +1,5 @@
 import os
 
-import launch  # prepares the same Python environment and model paths used by Fooocus
 from modules.civitai_manager import launch_civitai_manager
 
 
