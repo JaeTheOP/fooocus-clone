@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import html
 import os
+import time
 from typing import Any
 
 import gradio as gr
@@ -143,13 +144,21 @@ def launch_civitai_manager(
         server_port=port,
         share=share,
         auth=auth,
-        prevent_thread_lock=False,
+        prevent_thread_lock=True,
         show_error=True,
         quiet=False,
     )
     local_url = launch_result[1] if isinstance(launch_result, tuple) and len(launch_result) > 1 else None
     share_url = launch_result[2] if isinstance(launch_result, tuple) and len(launch_result) > 2 else None
     if local_url:
-        print(f"Renewed Fooocus Civitai Manager local URL: {local_url}")
+        print(f"Renewed Fooocus Civitai Manager local URL: {local_url}", flush=True)
     if share_url:
-        print(f"Renewed Fooocus Civitai Manager public URL: {share_url}")
+        print(f"Renewed Fooocus Civitai Manager public URL: {share_url}", flush=True)
+    elif share:
+        raise RuntimeError("Gradio did not return a public share URL. Check network access and the startup log.")
+
+    try:
+        while True:
+            time.sleep(3600)
+    except KeyboardInterrupt:
+        app.close()
