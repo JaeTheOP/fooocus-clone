@@ -1,0 +1,51 @@
+name: Validate Renewed Fooocus
+
+on:
+  push:
+    branches:
+      - main
+      - agent/civitai-model-manager
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install lightweight test dependency
+        run: python -m pip install httpx
+
+      - name: Validate Python syntax
+        run: |
+          python -m py_compile colab_launcher.py civitai_manager.py
+          python -m py_compile modules/civitai_client.py modules/civitai_manager.py
+
+      - name: Validate Colab notebook JSON and code cells
+        run: |
+          python - <<'PY'
+          import ast
+          import json
+          from pathlib import Path
+
+          notebook = json.loads(Path("colab.ipynb").read_text(encoding="utf-8"))
+          assert notebook["nbformat"] == 4
+          assert notebook["metadata"].get("accelerator") == "GPU"
+          for cell in notebook["cells"]:
+              if cell.get("cell_type") == "code":
+                  ast.parse("".join(cell.get("source", [])))
+          print("Colab notebook JSON and code cells are valid.")
+          PY
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
