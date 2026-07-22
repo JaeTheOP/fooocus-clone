@@ -23,13 +23,12 @@ jobs:
           cp assets/css/control-center-3.5.0.css "$package/assets/css/"
           cp assets/js/control-center-3.5.0.js "$package/assets/js/"
           cp apply-ui-3.5.0.php README-3.5.0.md CHANGELOG-3.5.0.md VERSION "$package/"
-          cd dist
-          zip -rq DEFENDR-OS-3.5.0-unified-portal-admin-design.zip DEFENDR-OS-3.5.0
 
-      - name: Upload update archive
+      - name: Upload update package
         uses: actions/upload-artifact@v4
         with:
           name: DEFENDR-OS-3.5.0-unified-portal-admin-design
-          path: dist/DEFENDR-OS-3.5.0-unified-portal-admin-design.zip
+          path: dist/DEFENDR-OS-3.5.0/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 1
