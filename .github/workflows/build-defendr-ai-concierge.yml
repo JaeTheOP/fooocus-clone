@@ -1,0 +1,22 @@
+name: Build DEFENDR AI Concierge Artifact
+on:
+  push:
+    branches:
+      - defendr-ai-concierge-3.5.0
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package installer
+        run: |
+          cd DEFENDR-AI-Concierge-3.5.0
+          zip -r ../DEFENDR-AI-Concierge-3.5.0.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DEFENDR-AI-Concierge-3.5.0
+          path: DEFENDR-AI-Concierge-3.5.0.zip
+          if-no-files-found: error
