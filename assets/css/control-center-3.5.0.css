@@ -1,0 +1,648 @@
+/* DEFENDR OS 3.5.0 — Unified Portal & Admin Design System */
+:root {
+  --ui-navy-950:#061426;
+  --ui-navy-900:#0a2038;
+  --ui-navy-800:#103756;
+  --ui-blue-600:#155eef;
+  --ui-blue-500:#2878ff;
+  --ui-aqua-500:#12a8a0;
+  --ui-aqua-100:#dff8f4;
+  --ui-bg:#f4f7fb;
+  --ui-surface:#ffffff;
+  --ui-surface-alt:#f8fafc;
+  --ui-border:#dbe4ee;
+  --ui-border-strong:#c4d1df;
+  --ui-text:#102a43;
+  --ui-muted:#627d98;
+  --ui-success:#16805f;
+  --ui-warning:#a46200;
+  --ui-danger:#c23b3b;
+  --ui-radius-sm:8px;
+  --ui-radius:12px;
+  --ui-radius-lg:16px;
+  --ui-shadow-sm:0 1px 2px rgba(15,35,55,.05);
+  --ui-shadow:0 8px 26px rgba(15,35,55,.08);
+  --ui-sidebar-width:264px;
+  --ui-space-1:4px;
+  --ui-space-2:8px;
+  --ui-space-3:12px;
+  --ui-space-4:16px;
+  --ui-space-5:20px;
+  --ui-space-6:24px;
+  --ui-space-7:32px;
+  --ui-space-8:40px;
+}
+
+body.defendr-control-ui,
+body.defendr-control-ui * { box-sizing:border-box; }
+
+body.defendr-control-ui {
+  margin:0;
+  background:var(--ui-bg);
+  color:var(--ui-text);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+body.defendr-control-ui a { color:var(--ui-blue-600); text-decoration:none; }
+body.defendr-control-ui a:hover { color:#0d47c9; }
+body.defendr-control-ui img { max-width:100%; }
+body.defendr-control-ui svg { flex:0 0 auto; }
+body.defendr-control-ui button svg,
+body.defendr-control-ui .btn svg,
+body.defendr-control-ui nav svg,
+body.defendr-control-ui .sidebar svg { width:18px!important; height:18px!important; max-width:18px!important; max-height:18px!important; }
+
+body.defendr-control-ui .app-shell,
+body.defendr-control-ui .portal-shell,
+body.defendr-control-ui .admin-shell,
+body.defendr-control-ui .dashboard-shell,
+body.defendr-control-ui .layout-shell {
+  min-height:100vh;
+  background:var(--ui-bg);
+}
+
+body.defendr-control-ui .sidebar,
+body.defendr-control-ui aside.sidebar,
+body.defendr-control-ui .app-sidebar,
+body.defendr-control-ui .portal-sidebar,
+body.defendr-control-ui .admin-sidebar {
+  width:var(--ui-sidebar-width);
+  background:linear-gradient(180deg,var(--ui-navy-950),var(--ui-navy-900));
+  color:#dbe8f5;
+  border-right:1px solid rgba(255,255,255,.07);
+  padding:18px 14px;
+}
+
+body.defendr-control-ui .sidebar-brand,
+body.defendr-control-ui .brand-block,
+body.defendr-control-ui .sidebar .brand,
+body.defendr-control-ui .sidebar-header {
+  min-height:58px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:6px 10px 16px;
+  margin-bottom:10px;
+  border-bottom:1px solid rgba(255,255,255,.09);
+}
+
+body.defendr-control-ui .sidebar nav,
+body.defendr-control-ui .sidebar-nav,
+body.defendr-control-ui .nav-list { display:grid; gap:4px; }
+
+body.defendr-control-ui .sidebar a,
+body.defendr-control-ui .sidebar-nav a,
+body.defendr-control-ui .nav-item,
+body.defendr-control-ui .nav-link {
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:9px 11px;
+  border-radius:9px;
+  color:#c9d9e8;
+  font-weight:600;
+  line-height:1.2;
+  transition:background .16s ease,color .16s ease,transform .16s ease;
+}
+
+body.defendr-control-ui .sidebar a:hover,
+body.defendr-control-ui .nav-link:hover {
+  background:rgba(255,255,255,.07);
+  color:#fff;
+  transform:translateX(1px);
+}
+
+body.defendr-control-ui .sidebar a.active,
+body.defendr-control-ui .sidebar .active > a,
+body.defendr-control-ui .nav-link.active,
+body.defendr-control-ui .nav-item.active {
+  background:linear-gradient(135deg,var(--ui-blue-600),#2475ef);
+  color:#fff;
+  box-shadow:0 8px 18px rgba(21,94,239,.24);
+}
+
+body.defendr-control-ui .nav-section,
+body.defendr-control-ui .nav-heading,
+body.defendr-control-ui .sidebar-label {
+  margin:18px 11px 7px;
+  color:#7893aa;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+}
+
+body.defendr-control-ui .topbar,
+body.defendr-control-ui .app-topbar,
+body.defendr-control-ui .portal-topbar,
+body.defendr-control-ui .admin-topbar,
+body.defendr-control-ui header.topbar {
+  min-height:68px;
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--ui-border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:12px 24px;
+  box-shadow:var(--ui-shadow-sm);
+  backdrop-filter:blur(10px);
+}
+
+body.defendr-control-ui .topbar-actions,
+body.defendr-control-ui .header-actions,
+body.defendr-control-ui .page-actions,
+body.defendr-control-ui .toolbar,
+body.defendr-control-ui .action-bar {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+body.defendr-control-ui main,
+body.defendr-control-ui .main-content,
+body.defendr-control-ui .page-content,
+body.defendr-control-ui .content,
+body.defendr-control-ui .dashboard-content {
+  width:100%;
+  max-width:1640px;
+  margin:0 auto;
+  padding:26px 28px 42px;
+}
+
+body.defendr-control-ui .page-header,
+body.defendr-control-ui .content-header,
+body.defendr-control-ui .dashboard-header,
+body.defendr-control-ui .title-row {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+  margin:0 0 22px;
+}
+
+body.defendr-control-ui h1,
+body.defendr-control-ui .page-title {
+  margin:0;
+  color:var(--ui-text);
+  font-size:clamp(24px,2vw,31px);
+  line-height:1.16;
+  letter-spacing:-.025em;
+}
+
+body.defendr-control-ui h2 { margin-top:0; font-size:20px; line-height:1.25; color:var(--ui-text); }
+body.defendr-control-ui h3 { margin-top:0; font-size:16px; line-height:1.3; color:var(--ui-text); }
+body.defendr-control-ui .subtitle,
+body.defendr-control-ui .page-subtitle,
+body.defendr-control-ui .muted,
+body.defendr-control-ui .text-muted { color:var(--ui-muted)!important; }
+
+body.defendr-control-ui .stats-grid,
+body.defendr-control-ui .kpi-grid,
+body.defendr-control-ui .metric-grid,
+body.defendr-control-ui .cards-grid,
+body.defendr-control-ui .dashboard-grid,
+body.defendr-control-ui .summary-grid,
+body.defendr-control-ui .quick-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:18px;
+  align-items:stretch;
+  margin-bottom:22px;
+}
+
+body.defendr-control-ui .grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; align-items:stretch; }
+body.defendr-control-ui .grid-3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; align-items:stretch; }
+body.defendr-control-ui .grid-4 { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; align-items:stretch; }
+
+body.defendr-control-ui .card,
+body.defendr-control-ui .panel,
+body.defendr-control-ui .widget,
+body.defendr-control-ui .box,
+body.defendr-control-ui .stat-card,
+body.defendr-control-ui .metric-card,
+body.defendr-control-ui .dashboard-card,
+body.defendr-control-ui .content-card,
+body.defendr-control-ui .settings-card,
+body.defendr-control-ui .form-card,
+body.defendr-control-ui .table-card {
+  min-width:0;
+  height:100%;
+  background:var(--ui-surface);
+  border:1px solid var(--ui-border);
+  border-radius:var(--ui-radius-lg);
+  box-shadow:var(--ui-shadow-sm);
+}
+
+body.defendr-control-ui .card,
+body.defendr-control-ui .panel,
+body.defendr-control-ui .widget,
+body.defendr-control-ui .box,
+body.defendr-control-ui .dashboard-card,
+body.defendr-control-ui .content-card,
+body.defendr-control-ui .settings-card,
+body.defendr-control-ui .form-card { padding:20px; }
+
+body.defendr-control-ui .stat-card,
+body.defendr-control-ui .metric-card {
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:13px;
+  min-height:132px;
+  padding:18px 20px;
+}
+
+body.defendr-control-ui .stat-card .value,
+body.defendr-control-ui .metric-card .value,
+body.defendr-control-ui .metric-value,
+body.defendr-control-ui .stat-value {
+  font-size:clamp(25px,2.2vw,34px);
+  line-height:1;
+  letter-spacing:-.035em;
+  font-weight:800;
+  color:var(--ui-text);
+}
+
+body.defendr-control-ui .card-header,
+body.defendr-control-ui .panel-header,
+body.defendr-control-ui .widget-header,
+body.defendr-control-ui .table-header,
+body.defendr-control-ui .section-header {
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin:-2px 0 16px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--ui-border);
+}
+
+body.defendr-control-ui .card-header h2,
+body.defendr-control-ui .card-header h3,
+body.defendr-control-ui .panel-header h2,
+body.defendr-control-ui .panel-header h3,
+body.defendr-control-ui .section-header h2,
+body.defendr-control-ui .section-header h3 { margin:0; }
+
+body.defendr-control-ui .btn,
+body.defendr-control-ui button,
+body.defendr-control-ui input[type="submit"],
+body.defendr-control-ui input[type="button"] {
+  min-height:40px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:8px 15px;
+  border:1px solid transparent;
+  border-radius:9px;
+  font:inherit;
+  font-weight:700;
+  line-height:1.2;
+  cursor:pointer;
+  transition:transform .15s ease,box-shadow .15s ease,background .15s ease,border-color .15s ease;
+}
+
+body.defendr-control-ui .btn:hover,
+body.defendr-control-ui button:hover { transform:translateY(-1px); }
+body.defendr-control-ui .btn-primary,
+body.defendr-control-ui button.primary,
+body.defendr-control-ui input[type="submit"] {
+  background:var(--ui-blue-600);
+  color:#fff;
+  border-color:var(--ui-blue-600);
+  box-shadow:0 5px 14px rgba(21,94,239,.18);
+}
+body.defendr-control-ui .btn-primary:hover,
+body.defendr-control-ui button.primary:hover,
+body.defendr-control-ui input[type="submit"]:hover { background:#0f50d4; border-color:#0f50d4; }
+body.defendr-control-ui .btn-secondary,
+body.defendr-control-ui .btn-outline,
+body.defendr-control-ui button.secondary {
+  background:#fff;
+  color:var(--ui-text);
+  border-color:var(--ui-border-strong);
+}
+body.defendr-control-ui .btn-danger { background:#fff; color:var(--ui-danger); border-color:#f1c4c4; }
+body.defendr-control-ui .btn-sm { min-height:34px; padding:6px 11px; font-size:12px; }
+body.defendr-control-ui .btn-block { width:100%; }
+
+body.defendr-control-ui form { margin:0; }
+body.defendr-control-ui .form-grid,
+body.defendr-control-ui .fields-grid,
+body.defendr-control-ui .settings-grid,
+body.defendr-control-ui .form-row-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:17px 18px;
+  align-items:start;
+}
+body.defendr-control-ui .form-grid .full,
+body.defendr-control-ui .fields-grid .full,
+body.defendr-control-ui .settings-grid .full,
+body.defendr-control-ui .span-2 { grid-column:1 / -1; }
+body.defendr-control-ui .form-group,
+body.defendr-control-ui .field,
+body.defendr-control-ui .input-group { min-width:0; margin:0 0 16px; }
+body.defendr-control-ui label {
+  display:block;
+  margin:0 0 7px;
+  color:#29475f;
+  font-size:12px;
+  font-weight:800;
+}
+body.defendr-control-ui input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+body.defendr-control-ui select,
+body.defendr-control-ui textarea {
+  width:100%;
+  min-height:42px;
+  padding:9px 11px;
+  border:1px solid var(--ui-border-strong);
+  border-radius:9px;
+  background:#fff;
+  color:var(--ui-text);
+  font:inherit;
+  outline:none;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+body.defendr-control-ui textarea { min-height:112px; resize:vertical; }
+body.defendr-control-ui input:focus,
+body.defendr-control-ui select:focus,
+body.defendr-control-ui textarea:focus {
+  border-color:var(--ui-blue-500)!important;
+  box-shadow:0 0 0 3px rgba(40,120,255,.13);
+}
+body.defendr-control-ui .help-text,
+body.defendr-control-ui small.help,
+body.defendr-control-ui .form-help { display:block; margin-top:6px; color:var(--ui-muted); font-size:12px; }
+
+body.defendr-control-ui .ui-table-wrap,
+body.defendr-control-ui .table-responsive,
+body.defendr-control-ui .table-wrap {
+  width:100%;
+  overflow:auto;
+  border:1px solid var(--ui-border);
+  border-radius:var(--ui-radius);
+  background:#fff;
+}
+body.defendr-control-ui table {
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  background:#fff;
+  color:var(--ui-text);
+}
+body.defendr-control-ui th,
+body.defendr-control-ui td {
+  padding:13px 14px;
+  border:0;
+  border-bottom:1px solid var(--ui-border);
+  text-align:left;
+  vertical-align:middle;
+}
+body.defendr-control-ui th {
+  background:#f7f9fc;
+  color:#49657c;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.045em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+body.defendr-control-ui tr:last-child td { border-bottom:0; }
+body.defendr-control-ui tbody tr:hover td { background:#f8fbff; }
+body.defendr-control-ui td.actions,
+body.defendr-control-ui th.actions { text-align:right; white-space:nowrap; }
+
+body.defendr-control-ui .badge,
+body.defendr-control-ui .pill,
+body.defendr-control-ui .status {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:25px;
+  padding:4px 9px;
+  border-radius:999px;
+  background:#edf3f8;
+  color:#47647c;
+  font-size:11px;
+  font-weight:800;
+  line-height:1;
+}
+body.defendr-control-ui .badge-success,
+body.defendr-control-ui .status-success,
+body.defendr-control-ui .status.active { background:var(--ui-aqua-100); color:var(--ui-success); }
+body.defendr-control-ui .badge-warning,
+body.defendr-control-ui .status-warning { background:#fff2d7; color:var(--ui-warning); }
+body.defendr-control-ui .badge-danger,
+body.defendr-control-ui .status-danger { background:#ffebeb; color:var(--ui-danger); }
+body.defendr-control-ui .badge-info,
+body.defendr-control-ui .status-info { background:#e8f0ff; color:#2259bd; }
+
+body.defendr-control-ui .alert,
+body.defendr-control-ui .notice,
+body.defendr-control-ui .flash {
+  padding:13px 15px;
+  margin:0 0 18px;
+  border:1px solid #c9dcff;
+  border-radius:10px;
+  background:#eef4ff;
+  color:#244e90;
+}
+body.defendr-control-ui .alert-success { background:#e8f7f1; border-color:#b8e4d4; color:#166a50; }
+body.defendr-control-ui .alert-danger,
+body.defendr-control-ui .alert-error { background:#fff0f0; border-color:#f3c9c9; color:#9d2d2d; }
+body.defendr-control-ui .alert-warning { background:#fff7e5; border-color:#f0d79f; color:#855700; }
+
+body.defendr-control-ui .tabs,
+body.defendr-control-ui .tab-list {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:5px;
+  margin-bottom:18px;
+  border:1px solid var(--ui-border);
+  border-radius:11px;
+  background:#fff;
+  overflow:auto;
+}
+body.defendr-control-ui .tabs a,
+body.defendr-control-ui .tab,
+body.defendr-control-ui .tab-link {
+  min-height:34px;
+  display:inline-flex;
+  align-items:center;
+  padding:7px 12px;
+  border-radius:8px;
+  color:var(--ui-muted);
+  font-weight:700;
+  white-space:nowrap;
+}
+body.defendr-control-ui .tabs .active,
+body.defendr-control-ui .tab.active,
+body.defendr-control-ui .tab-link.active { background:#edf3ff; color:var(--ui-blue-600); }
+
+body.defendr-control-ui .empty-state {
+  min-height:210px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:32px;
+  text-align:center;
+  color:var(--ui-muted);
+}
+body.defendr-control-ui .empty-state h2,
+body.defendr-control-ui .empty-state h3 { margin:0; color:var(--ui-text); }
+
+body.defendr-control-ui .modal,
+body.defendr-control-ui .dialog,
+body.defendr-control-ui [role="dialog"] {
+  border-radius:var(--ui-radius-lg);
+}
+body.defendr-control-ui .modal-content,
+body.defendr-control-ui .dialog-content {
+  width:min(680px,calc(100vw - 28px));
+  max-height:calc(100vh - 40px);
+  overflow:auto;
+  border:1px solid var(--ui-border);
+  border-radius:var(--ui-radius-lg);
+  background:#fff;
+  box-shadow:0 28px 80px rgba(6,20,38,.22);
+}
+
+body.defendr-control-ui .pagination {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:16px;
+}
+body.defendr-control-ui .pagination a,
+body.defendr-control-ui .pagination span {
+  min-width:34px;
+  min-height:34px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--ui-border);
+  border-radius:8px;
+  background:#fff;
+  color:var(--ui-text);
+  font-weight:700;
+}
+body.defendr-control-ui .pagination .active { background:var(--ui-blue-600); border-color:var(--ui-blue-600); color:#fff; }
+
+body.defendr-control-ui .ui-mobile-overlay {
+  position:fixed;
+  inset:0;
+  z-index:998;
+  display:none;
+  background:rgba(6,20,38,.48);
+  backdrop-filter:blur(2px);
+}
+body.defendr-control-ui.ui-nav-open .ui-mobile-overlay { display:block; }
+
+@media (max-width:1180px) {
+  body.defendr-control-ui .grid-4 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  body.defendr-control-ui .grid-3 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+@media (max-width:860px) {
+  body.defendr-control-ui .sidebar,
+  body.defendr-control-ui aside.sidebar,
+  body.defendr-control-ui .app-sidebar,
+  body.defendr-control-ui .portal-sidebar,
+  body.defendr-control-ui .admin-sidebar {
+    position:fixed;
+    z-index:999;
+    inset:0 auto 0 0;
+    height:100vh;
+    transform:translateX(-102%);
+    transition:transform .22s ease;
+    box-shadow:20px 0 50px rgba(6,20,38,.24);
+  }
+  body.defendr-control-ui.ui-nav-open .sidebar,
+  body.defendr-control-ui.ui-nav-open aside.sidebar,
+  body.defendr-control-ui.ui-nav-open .app-sidebar,
+  body.defendr-control-ui.ui-nav-open .portal-sidebar,
+  body.defendr-control-ui.ui-nav-open .admin-sidebar { transform:translateX(0); }
+  body.defendr-control-ui .topbar,
+  body.defendr-control-ui .app-topbar,
+  body.defendr-control-ui .portal-topbar,
+  body.defendr-control-ui .admin-topbar { min-height:62px; padding:10px 16px; }
+  body.defendr-control-ui main,
+  body.defendr-control-ui .main-content,
+  body.defendr-control-ui .page-content,
+  body.defendr-control-ui .content,
+  body.defendr-control-ui .dashboard-content { padding:20px 16px 32px; }
+  body.defendr-control-ui .page-header,
+  body.defendr-control-ui .content-header,
+  body.defendr-control-ui .dashboard-header,
+  body.defendr-control-ui .title-row { flex-direction:column; align-items:stretch; gap:13px; }
+  body.defendr-control-ui .page-actions,
+  body.defendr-control-ui .toolbar,
+  body.defendr-control-ui .action-bar { justify-content:flex-start; }
+  body.defendr-control-ui .grid-2,
+  body.defendr-control-ui .grid-3,
+  body.defendr-control-ui .grid-4,
+  body.defendr-control-ui .form-grid,
+  body.defendr-control-ui .fields-grid,
+  body.defendr-control-ui .settings-grid,
+  body.defendr-control-ui .form-row-grid { grid-template-columns:1fr; }
+  body.defendr-control-ui .form-grid .full,
+  body.defendr-control-ui .fields-grid .full,
+  body.defendr-control-ui .settings-grid .full,
+  body.defendr-control-ui .span-2 { grid-column:auto; }
+  body.defendr-control-ui .card,
+  body.defendr-control-ui .panel,
+  body.defendr-control-ui .widget,
+  body.defendr-control-ui .box,
+  body.defendr-control-ui .dashboard-card,
+  body.defendr-control-ui .content-card,
+  body.defendr-control-ui .settings-card,
+  body.defendr-control-ui .form-card { padding:16px; }
+  body.defendr-control-ui .stats-grid,
+  body.defendr-control-ui .kpi-grid,
+  body.defendr-control-ui .metric-grid,
+  body.defendr-control-ui .cards-grid,
+  body.defendr-control-ui .dashboard-grid,
+  body.defendr-control-ui .summary-grid,
+  body.defendr-control-ui .quick-grid { grid-template-columns:1fr; gap:14px; }
+  body.defendr-control-ui .ui-table-wrap table,
+  body.defendr-control-ui .table-responsive table,
+  body.defendr-control-ui .table-wrap table { min-width:720px; }
+}
+
+@media (max-width:520px) {
+  body.defendr-control-ui .btn,
+  body.defendr-control-ui button,
+  body.defendr-control-ui input[type="submit"] { max-width:100%; }
+  body.defendr-control-ui .topbar-actions,
+  body.defendr-control-ui .header-actions { gap:6px; }
+  body.defendr-control-ui th,
+  body.defendr-control-ui td { padding:11px 12px; }
+}
+
+@media print {
+  body.defendr-control-ui .sidebar,
+  body.defendr-control-ui .topbar,
+  body.defendr-control-ui .ui-mobile-overlay,
+  body.defendr-control-ui .no-print { display:none!important; }
+  body.defendr-control-ui,
+  body.defendr-control-ui main,
+  body.defendr-control-ui .content,
+  body.defendr-control-ui .page-content { background:#fff!important; padding:0!important; }
+  body.defendr-control-ui .card,
+  body.defendr-control-ui .panel { box-shadow:none!important; break-inside:avoid; }
+}
