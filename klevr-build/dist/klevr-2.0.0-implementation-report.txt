@@ -1,0 +1,44 @@
+KLEVR 2.0.0 — 10% EQUIPMENT PRICE REDUCTION
+=================================================
+
+Package: klevr-software-update-2.0.0-equipment-price-reduction.zip
+Minimum version: 1.9.9
+Target version: 2.0.0
+Database migrations: 1
+Deleted files: 0
+SHA-256: 2178f9c33424a7263b5f567def2b96520956a417693536a0d4eda93a462daa9c
+
+SCOPE
+-----
+- Reduces all catalog-controlled AJAX customer equipment prices by 10%.
+- Reduces current hardware add-on storefront prices by 10% when available.
+- Leaves internal equipment cost unchanged.
+- Leaves monitoring, installation, programming, shipping, tax, payment, and service fees unchanged.
+- Does not alter historical orders, completed payments, subscriptions, or monitoring accounts.
+
+UPDATED CORE EQUIPMENT PRICES
+-----------------------------
+- KLEVR Essential: $368.40 -> $331.56
+- KLEVR Signature: $632.25 -> $569.03
+- KLEVR RV: $397.08 -> $357.37
+- KLEVR Apartment: $368.71 -> $331.84
+
+UPDATED EXAMPLE ADD-ONS
+-----------------------
+- AJAX MotionProtect: $61.72 -> $55.55
+- AJAX DoorProtect: $28.37 -> $25.53
+- AJAX SpaceControl: $28.37 -> $25.53
+- AJAX GlassProtect: $55.06 -> $49.55
+- AJAX Doorbell: $233.94 -> $210.55
+- Optional 2K WireFree Camera: $49.99 -> $44.99 when stored in hardware_addons
+
+MARGIN EFFECT
+-------------
+The original Tier 2 customer price represented a 30% markup on cost. Reducing that customer price by 10% results in a 17% markup on cost and approximately a 14.53% equipment gross margin as a percentage of the new equipment price, before processing, fulfillment, warranty, returns, and overhead.
+
+SAFETY
+------
+- Creates a protected backup of the original AJAX pricing catalog before modifying it.
+- Uses a marker to prevent the reduction from being applied twice.
+- Monitoring and installation prices are excluded.
+- A live production installation or transaction was not performed during packaging.
