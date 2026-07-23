@@ -22,6 +22,7 @@
   ],
   "checksums": {
     "health/release-2.0.0.php": "1fbc47934e8c4bc2512a418294f3435b9ccd188bec8dd860efb7f1c617be2038",
+    "manifest.json": "5ba2552ee15ba42497f04da065f53823d593c2f4dc7cf0d0e7e08fdac67793b8",
     "migrations/20260723_003_equipment_price_reduction.php": "43b40e8416366491fbea96f32875e4bafef3c92634dd3a7ac9df910f920bc799",
     "payload/docs/release-2.0.0-equipment-price-reduction.md": "d8eb9ac4a1e166e8c68db699c554478ce48044f9965851777272995f0e653f42",
     "payload/includes/app_version.php": "084549479201fec5b9f43426a4f17ac7ba30122e1dbb8fbf70149df63aae1a3b"

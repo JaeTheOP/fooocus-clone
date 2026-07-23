@@ -6,7 +6,7 @@ Minimum version: 1.9.9
 Target version: 2.0.0
 Database migrations: 1
 Deleted files: 0
-SHA-256: 2178f9c33424a7263b5f567def2b96520956a417693536a0d4eda93a462daa9c
+SHA-256: 43567936ab8aa54819c5e427ee05361aed9630dc34ef11db90d67bde2be0e6cc
 
 SCOPE
 -----
