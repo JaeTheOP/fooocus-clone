@@ -1,0 +1,30 @@
+name: Build KLEVR Equipment Update
+
+on:
+  push:
+    branches:
+      - klevr-equipment-price-build
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: klevr-equipment-price-build
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build managed update
+        run: python klevr-build/build.py
+      - name: Commit generated artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add klevr-build/dist klevr-build/package/manifest.json
+          git diff --cached --quiet || git commit -m "Build KLEVR 2.0.0 artifacts [skip ci]"
+          git push origin HEAD:klevr-equipment-price-build
