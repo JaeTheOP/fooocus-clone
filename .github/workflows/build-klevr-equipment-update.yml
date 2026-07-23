@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - agent/klevr-pricing-manager
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -34,6 +37,7 @@ jobs:
           name: klevr-2.1.0-pricing-manager
           path: klevr-build/dist/*
       - name: Commit generated artifacts
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
