@@ -1,97 +1,153 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
 from pathlib import Path
 import hashlib
 import json
 import shutil
+import subprocess
 import zipfile
 
-root = Path(__file__).resolve().parent
-source = root / 'package'
-dist = root / 'dist'
-if dist.exists():
-    shutil.rmtree(dist)
-dist.mkdir(parents=True)
+ROOT = Path(__file__).resolve().parent
+SOURCE = ROOT / "package"
+DIST = ROOT / "dist"
+VERSION = "2.1.0"
+PACKAGE_ID = "klevr-central-pricing-manager"
+PACKAGE_NAME = f"klevr-software-update-{VERSION}-pricing-manager.zip"
 
-checksums = {}
-for path in sorted(source.rglob('*')):
-    if path.is_file():
-        rel = path.relative_to(source).as_posix()
-        checksums[rel] = hashlib.sha256(path.read_bytes()).hexdigest()
 
-manifest = {
-    'schema_version': 1,
-    'package_id': 'klevr-equipment-price-reduction',
-    'version': '2.0.0',
-    'minimum_version': '1.9.9',
-    'description': 'Reduce all current customer-facing equipment prices by 10 percent while leaving monitoring, installation, shipping, tax, and service fees unchanged.',
-    'payload_path': 'payload',
-    'requirements': {
-        'php': '7.4.0',
-        'extensions': ['pdo', 'zip', 'openssl'],
-    },
-    'delete_paths': [],
-    'migrations': ['migrations/20260723_003_equipment_price_reduction.php'],
-    'health_checks': ['health/release-2.0.0.php'],
-    'checksums': checksums,
-    'built_at': '2026-07-23T18:00:00Z',
-}
-(source / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
-package_name = 'klevr-software-update-2.0.0-equipment-price-reduction.zip'
-package_path = dist / package_name
-with zipfile.ZipFile(package_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-    for path in sorted(source.rglob('*')):
-        if path.is_file():
-            archive.write(path, path.relative_to(source).as_posix())
 
-sha = hashlib.sha256(package_path.read_bytes()).hexdigest()
-(dist / 'klevr-software-update-2.0.0-equipment-price-reduction.sha256').write_text(
-    f'{sha}  {package_name}\n', encoding='utf-8'
-)
+def validate_php() -> None:
+    php_files = sorted(SOURCE.rglob("*.php"))
+    for path in php_files:
+        subprocess.run(["php", "-l", str(path)], check=True, capture_output=True, text=True)
 
-report = f'''KLEVR 2.0.0 — 10% EQUIPMENT PRICE REDUCTION
-=================================================
 
-Package: {package_name}
-Minimum version: 1.9.9
-Target version: 2.0.0
-Database migrations: 1
-Deleted files: 0
-SHA-256: {sha}
+def build_manifest() -> dict:
+    checksums: dict[str, str] = {}
+    for path in sorted(SOURCE.rglob("*")):
+        if not path.is_file() or path.name == "manifest.json":
+            continue
+        checksums[path.relative_to(SOURCE).as_posix()] = sha256(path)
 
-SCOPE
------
-- Reduces all catalog-controlled AJAX customer equipment prices by 10%.
-- Reduces current hardware add-on storefront prices by 10% when available.
-- Leaves internal equipment cost unchanged.
-- Leaves monitoring, installation, programming, shipping, tax, payment, and service fees unchanged.
-- Does not alter historical orders, completed payments, subscriptions, or monitoring accounts.
+    manifest = {
+        "schema_version": 1,
+        "package_id": PACKAGE_ID,
+        "version": VERSION,
+        "minimum_version": "1.9.9",
+        "description": "Add a central administrator Pricing Manager for package, plan, service, installation, and customer equipment prices.",
+        "payload_path": "payload",
+        "requirements": {
+            "php": "7.4.0",
+            "extensions": ["pdo", "zip", "openssl"],
+        },
+        "delete_paths": [],
+        "migrations": [
+            "migrations/20260723_003_equipment_price_reduction.php",
+            "migrations/20260723_004_pricing_manager.php",
+        ],
+        "health_checks": ["health/release-2.1.0.php"],
+        "checksums": checksums,
+        "built_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    }
+    (SOURCE / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    return manifest
 
-UPDATED CORE EQUIPMENT PRICES
------------------------------
-- KLEVR Essential: $368.40 -> $331.56
-- KLEVR Signature: $632.25 -> $569.03
-- KLEVR RV: $397.08 -> $357.37
-- KLEVR Apartment: $368.71 -> $331.84
 
-UPDATED EXAMPLE ADD-ONS
------------------------
-- AJAX MotionProtect: $61.72 -> $55.55
-- AJAX DoorProtect: $28.37 -> $25.53
-- AJAX SpaceControl: $28.37 -> $25.53
-- AJAX GlassProtect: $55.06 -> $49.55
-- AJAX Doorbell: $233.94 -> $210.55
-- Optional 2K WireFree Camera: $49.99 -> $44.99 when stored in hardware_addons
+def build_archive() -> tuple[Path, str]:
+    if DIST.exists():
+        shutil.rmtree(DIST)
+    DIST.mkdir(parents=True)
 
-MARGIN EFFECT
--------------
-The original Tier 2 customer price represented a 30% markup on cost. Reducing that customer price by 10% results in a 17% markup on cost and approximately a 14.53% equipment gross margin as a percentage of the new equipment price, before processing, fulfillment, warranty, returns, and overhead.
+    package_path = DIST / PACKAGE_NAME
+    with zipfile.ZipFile(package_path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+        for path in sorted(SOURCE.rglob("*")):
+            if path.is_file():
+                archive.write(path, path.relative_to(SOURCE).as_posix())
+
+    with zipfile.ZipFile(package_path, "r") as archive:
+        bad_file = archive.testzip()
+        if bad_file is not None:
+            raise RuntimeError(f"ZIP integrity failed at {bad_file}")
+
+    digest = sha256(package_path)
+    (DIST / f"{PACKAGE_NAME}.sha256").write_text(f"{digest}  {PACKAGE_NAME}\n", encoding="utf-8")
+    return package_path, digest
+
+
+def write_report(package_path: Path, digest: str, manifest: dict) -> None:
+    payload_files = [p for p in SOURCE.rglob("payload/*") if p.is_file()]
+    report = f"""KLEVR 2.1.0 — CENTRAL PRICING MANAGER
+=======================================
+
+Package: {package_path.name}
+Minimum version: {manifest['minimum_version']}
+Target version: {manifest['version']}
+Payload files: {len(payload_files)}
+Database migrations: {len(manifest['migrations'])}
+Deleted files: {len(manifest['delete_paths'])}
+SHA-256: {digest}
+
+IMPLEMENTED
+-----------
+- Adds Admin > Pricing Manager.
+- Lets authorized administrators edit package, monitoring, installation, service, and equipment prices.
+- Edits the shared AJAX Tier 2 customer-price catalog used by Packages, System Builder, cart, checkout, and new order calculations.
+- Edits recognized price fields in products, packages, monitoring_plans, and hardware_addons when those tables exist.
+- Shows internal equipment cost, customer price, gross margin, and installation reference.
+- Provides name, SKU, category, and slug search.
+- Synchronizes a changed catalog item to an exact matching database product/add-on where available.
 
 SAFETY
 ------
-- Creates a protected backup of the original AJAX pricing catalog before modifying it.
-- Uses a marker to prevent the reduction from being applied twice.
-- Monitoring and installation prices are excluded.
-- A live production installation or transaction was not performed during packaging.
-'''
-(dist / 'klevr-2.0.0-implementation-report.txt').write_text(report, encoding='utf-8')
-print(sha)
+- Creates timestamped protected catalog backups before catalog writes.
+- Uses atomic file replacement and retains the latest 25 catalog backups.
+- Uses prepared statements and strict table/column allowlists.
+- Validates nonnegative prices up to $1,000,000.
+- Adds CSRF protection and an operator confirmation prompt.
+- Writes success/failure records to a JSONL audit log.
+- Leaves completed orders, payments, subscriptions, and monitoring accounts unchanged.
+
+CUMULATIVE BASELINE
+-------------------
+- Includes the idempotent KLEVR 2.0.0 10 percent equipment-price reduction migration.
+- Minimum supported installed version remains 1.9.9.
+- The 2.0.0 marker prevents the equipment reduction from running twice.
+
+VALIDATION
+----------
+- PHP syntax validation passed for every packaged PHP file.
+- Managed manifest checksums were generated for every payload, migration, and health file.
+- Manifest self-checksum is intentionally excluded so checksum verification remains deterministic.
+- ZIP archive integrity passed.
+- No database credentials, customer records, uploads, payments, API keys, or protected media are bundled.
+
+INSTALLATION
+------------
+1. Open Admin > Software Updates.
+2. Upload {package_path.name}.
+3. Confirm current version is at least 1.9.9 and target version is 2.1.0.
+4. Choose Back Up & Apply.
+5. Confirm all post-install health checks pass.
+6. Open Admin > Pricing Manager.
+7. Change one package or equipment price and save.
+8. Confirm that price in Packages, System Builder, cart, and checkout.
+
+A live production installation, checkout, or payment was not performed during packaging.
+"""
+    (DIST / "klevr-2.1.0-implementation-report.txt").write_text(report, encoding="utf-8")
+
+
+def main() -> None:
+    validate_php()
+    manifest = build_manifest()
+    package_path, digest = build_archive()
+    write_report(package_path, digest, manifest)
+    print(digest)
+
+
+if __name__ == "__main__":
+    main()
