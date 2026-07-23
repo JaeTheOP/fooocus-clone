@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - klevr-equipment-price-build
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -21,7 +24,13 @@ jobs:
           python-version: '3.12'
       - name: Build managed update
         run: python klevr-build/build.py
+      - name: Upload generated package
+        uses: actions/upload-artifact@v4
+        with:
+          name: klevr-2.0.0-equipment-price-reduction
+          path: klevr-build/dist/*
       - name: Commit generated artifacts
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
