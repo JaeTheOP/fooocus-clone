@@ -4,10 +4,10 @@ KLEVR 2.1.0 — CENTRAL PRICING MANAGER
 Package: klevr-software-update-2.1.0-pricing-manager.zip
 Minimum version: 1.9.9
 Target version: 2.1.0
-Payload files: 0
+Payload files: 4
 Database migrations: 2
 Deleted files: 0
-SHA-256: 99909b11d4f88913efc5948c601469b10bcf34ef610de1b7f96f7508a69b1916
+SHA-256: 45de87374aa5d41daf420e380e331c50ee7ead849e11befa268fafca7e9519ef
 
 IMPLEMENTED
 -----------
