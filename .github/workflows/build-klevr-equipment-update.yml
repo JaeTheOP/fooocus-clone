@@ -1,0 +1,46 @@
+name: Build KLEVR Pricing Manager Update
+
+on:
+  push:
+    branches:
+      - agent/klevr-pricing-manager
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/klevr-pricing-manager
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+      - name: Build managed update
+        run: python klevr-build/build.py
+      - name: Verify archive
+        run: python -m zipfile -t klevr-build/dist/klevr-software-update-2.1.1-pricing-manager.zip
+      - name: Upload generated package
+        uses: actions/upload-artifact@v4
+        with:
+          name: klevr-2.1.1-pricing-manager
+          path: klevr-build/dist/*
+      - name: Commit generated artifacts
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add klevr-build/dist klevr-build/package/manifest.json
+          git diff --cached --quiet || git commit -m "Build KLEVR 2.1.1 pricing manager artifacts [skip ci]"
+          git push origin HEAD:agent/klevr-pricing-manager

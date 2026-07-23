@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "package_id": "klevr-central-pricing-manager",
+  "version": "2.1.1",
+  "minimum_version": "1.9.9",
+  "description": "Add the central administrator Pricing Manager and correct the managed updater manifest schema.",
+  "payload_path": "payload",
+  "requirements": {
+    "php": "7.4.0",
+    "extensions": [
+      "pdo",
+      "zip",
+      "openssl"
+    ]
+  },
+  "delete_paths": [],
+  "migrations": [
+    {
+      "id": "20260723_003_equipment_price_reduction",
+      "up": "migrations/20260723_003_equipment_price_reduction.php"
+    },
+    {
+      "id": "20260723_004_pricing_manager",
+      "up": "migrations/20260723_004_pricing_manager.php"
+    }
+  ],
+  "health_checks": [
+    "health/release-2.1.1.php"
+  ],
+  "checksums": {
+    "admin/pricing_manager.php": "574477875de9bdc69ff8d6ecd1b31a75e7cf6e210dd0af28ca0a061f109eb3b2",
+    "docs/release-2.0.0-equipment-price-reduction.md": "d8eb9ac4a1e166e8c68db699c554478ce48044f9965851777272995f0e653f42",
+    "docs/release-2.1.1-pricing-manager.md": "72fd58c9f48cd3ce53279cd422b6f1972737e25e7c01854ba614af8e1e49421b",
+    "includes/app_version.php": "8b0da7d05ab58d8191f420e751f44f61515203925f326112bb7399ffcd5dcef7",
+    "migrations/20260723_003_equipment_price_reduction.php": "43b40e8416366491fbea96f32875e4bafef3c92634dd3a7ac9df910f920bc799",
+    "migrations/20260723_004_pricing_manager.php": "34af951c9f64068dbd8e8e6f2a7acd8de4abeccbed02e8fa4bfdc40ccbd40075",
+    "health/release-2.1.1.php": "730777e8ea5a67fdb78ee1e75becfe5892a643a0c1e193c074dc9076f8f4e882"
+  },
+  "built_at": "2026-07-23T21:01:57Z"
+}
