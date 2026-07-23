@@ -1,0 +1,27 @@
+KLEVR 2.1.1 — PRICING MANAGER PREFLIGHT FIX
+================================================
+
+Package: klevr-software-update-2.1.1-pricing-manager.zip
+Minimum version: 1.9.9
+Target version: 2.1.1
+Payload files: 4
+Database migrations: 2
+Deleted files: 0
+SHA-256: 6222eaf39a2518f32c606c3a3a1016581a9f9c1b204fb29261dc98e03f9d3279
+
+CORRECTED
+---------
+- Payload checksum keys are relative to the payload root and omit the payload/ prefix.
+- Every migration is declared with the required id and up fields.
+- Migration and health-check checksums remain package-root relative.
+- The package remains cumulative from KLEVR 1.9.9 and includes the Pricing Manager.
+
+VALIDATION
+----------
+- Every packaged PHP file passed php -l.
+- Payload, migration, and health-check SHA-256 validation passed.
+- Managed updater preflight schema emulation passed.
+- ZIP archive integrity passed.
+
+Discard the rejected 2.1.0 stage and upload this 2.1.1 package through Admin > Software Updates.
+A live production installation, checkout, payment, or database migration was not performed during packaging.
