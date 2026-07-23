@@ -79,7 +79,7 @@ def build_archive() -> tuple[Path, str]:
 
 
 def write_report(package_path: Path, digest: str, manifest: dict) -> None:
-    payload_files = [p for p in SOURCE.rglob("payload/*") if p.is_file()]
+    payload_files = [p for p in (SOURCE / "payload").rglob("*") if p.is_file()]
     report = f"""KLEVR 2.1.0 — CENTRAL PRICING MANAGER
 =======================================
 
