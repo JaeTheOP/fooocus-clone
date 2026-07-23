@@ -10,10 +10,22 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = ROOT / "package"
+PAYLOAD = SOURCE / "payload"
 DIST = ROOT / "dist"
-VERSION = "2.1.0"
+VERSION = "2.1.1"
 PACKAGE_ID = "klevr-central-pricing-manager"
 PACKAGE_NAME = f"klevr-software-update-{VERSION}-pricing-manager.zip"
+MIGRATIONS = [
+    {
+        "id": "20260723_003_equipment_price_reduction",
+        "up": "migrations/20260723_003_equipment_price_reduction.php",
+    },
+    {
+        "id": "20260723_004_pricing_manager",
+        "up": "migrations/20260723_004_pricing_manager.php",
+    },
+]
+HEALTH_CHECKS = ["health/release-2.1.1.php"]
 
 
 def sha256(path: Path) -> str:
@@ -21,40 +33,90 @@ def sha256(path: Path) -> str:
 
 
 def validate_php() -> None:
-    php_files = sorted(SOURCE.rglob("*.php"))
-    for path in php_files:
+    for path in sorted(SOURCE.rglob("*.php")):
         subprocess.run(["php", "-l", str(path)], check=True, capture_output=True, text=True)
 
 
-def build_manifest() -> dict:
+def build_checksums() -> dict[str, str]:
     checksums: dict[str, str] = {}
-    for path in sorted(SOURCE.rglob("*")):
-        if not path.is_file() or path.name == "manifest.json":
-            continue
-        checksums[path.relative_to(SOURCE).as_posix()] = sha256(path)
 
+    # The managed updater indexes payload files by their installed path, not by
+    # their ZIP path. Therefore payload checksum keys must omit "payload/".
+    for path in sorted(PAYLOAD.rglob("*")):
+        if path.is_file():
+            checksums[path.relative_to(PAYLOAD).as_posix()] = sha256(path)
+
+    # Migration and health paths remain package-root relative.
+    for migration in MIGRATIONS:
+        up_path = SOURCE / migration["up"]
+        checksums[migration["up"]] = sha256(up_path)
+    for health_path in HEALTH_CHECKS:
+        checksums[health_path] = sha256(SOURCE / health_path)
+
+    return checksums
+
+
+def build_manifest() -> dict:
     manifest = {
         "schema_version": 1,
         "package_id": PACKAGE_ID,
         "version": VERSION,
         "minimum_version": "1.9.9",
-        "description": "Add a central administrator Pricing Manager for package, plan, service, installation, and customer equipment prices.",
+        "description": "Add the central administrator Pricing Manager and correct the managed updater manifest schema.",
         "payload_path": "payload",
         "requirements": {
             "php": "7.4.0",
             "extensions": ["pdo", "zip", "openssl"],
         },
         "delete_paths": [],
-        "migrations": [
-            "migrations/20260723_003_equipment_price_reduction.php",
-            "migrations/20260723_004_pricing_manager.php",
-        ],
-        "health_checks": ["health/release-2.1.0.php"],
-        "checksums": checksums,
+        "migrations": MIGRATIONS,
+        "health_checks": HEALTH_CHECKS,
+        "checksums": build_checksums(),
         "built_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
     }
     (SOURCE / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     return manifest
+
+
+def validate_preflight_schema(manifest: dict) -> None:
+    errors: list[str] = []
+    checksums = manifest.get("checksums", {})
+
+    for path in sorted(PAYLOAD.rglob("*")):
+        if not path.is_file():
+            continue
+        relative_path = path.relative_to(PAYLOAD).as_posix()
+        expected = checksums.get(relative_path)
+        if not expected:
+            errors.append(f"Managed package checksum is missing for {relative_path}")
+        elif expected.lower() != sha256(path).lower():
+            errors.append(f"Managed package checksum does not match for {relative_path}")
+
+    for migration in manifest.get("migrations", []):
+        if not isinstance(migration, dict) or not migration.get("id") or not migration.get("up"):
+            errors.append("Every migration requires an id and up file.")
+            continue
+        up_path = SOURCE / migration["up"]
+        if not up_path.is_file():
+            errors.append(f"Migration up file is missing for {migration['id']}")
+        expected = checksums.get(migration["up"])
+        if not expected:
+            errors.append(f"Managed package checksum is missing for {migration['up']}")
+        elif up_path.is_file() and expected.lower() != sha256(up_path).lower():
+            errors.append(f"Managed package checksum does not match for {migration['up']}")
+
+    for health_path in manifest.get("health_checks", []):
+        path = SOURCE / health_path
+        expected = checksums.get(health_path)
+        if not path.is_file():
+            errors.append(f"Health check is missing: {health_path}")
+        elif not expected:
+            errors.append(f"Managed package checksum is missing for {health_path}")
+        elif expected.lower() != sha256(path).lower():
+            errors.append(f"Managed package checksum does not match for {health_path}")
+
+    if errors:
+        raise RuntimeError("Preflight schema validation failed:\n" + "\n".join(errors))
 
 
 def build_archive() -> tuple[Path, str]:
@@ -79,9 +141,9 @@ def build_archive() -> tuple[Path, str]:
 
 
 def write_report(package_path: Path, digest: str, manifest: dict) -> None:
-    payload_files = [p for p in (SOURCE / "payload").rglob("*") if p.is_file()]
-    report = f"""KLEVR 2.1.0 — CENTRAL PRICING MANAGER
-=======================================
+    payload_files = [path for path in PAYLOAD.rglob("*") if path.is_file()]
+    report = f"""KLEVR 2.1.1 — PRICING MANAGER PREFLIGHT FIX
+================================================
 
 Package: {package_path.name}
 Minimum version: {manifest['minimum_version']}
@@ -91,59 +153,30 @@ Database migrations: {len(manifest['migrations'])}
 Deleted files: {len(manifest['delete_paths'])}
 SHA-256: {digest}
 
-IMPLEMENTED
------------
-- Adds Admin > Pricing Manager.
-- Lets authorized administrators edit package, monitoring, installation, service, and equipment prices.
-- Edits the shared AJAX Tier 2 customer-price catalog used by Packages, System Builder, cart, checkout, and new order calculations.
-- Edits recognized price fields in products, packages, monitoring_plans, and hardware_addons when those tables exist.
-- Shows internal equipment cost, customer price, gross margin, and installation reference.
-- Provides name, SKU, category, and slug search.
-- Synchronizes a changed catalog item to an exact matching database product/add-on where available.
-
-SAFETY
-------
-- Creates timestamped protected catalog backups before catalog writes.
-- Uses atomic file replacement and retains the latest 25 catalog backups.
-- Uses prepared statements and strict table/column allowlists.
-- Validates nonnegative prices up to $1,000,000.
-- Adds CSRF protection and an operator confirmation prompt.
-- Writes success/failure records to a JSONL audit log.
-- Leaves completed orders, payments, subscriptions, and monitoring accounts unchanged.
-
-CUMULATIVE BASELINE
--------------------
-- Includes the idempotent KLEVR 2.0.0 10 percent equipment-price reduction migration.
-- Minimum supported installed version remains 1.9.9.
-- The 2.0.0 marker prevents the equipment reduction from running twice.
+CORRECTED
+---------
+- Payload checksum keys are relative to the payload root and omit the payload/ prefix.
+- Every migration is declared with the required id and up fields.
+- Migration and health-check checksums remain package-root relative.
+- The package remains cumulative from KLEVR 1.9.9 and includes the Pricing Manager.
 
 VALIDATION
 ----------
-- PHP syntax validation passed for every packaged PHP file.
-- Managed manifest checksums were generated for every payload, migration, and health file.
-- Manifest self-checksum is intentionally excluded so checksum verification remains deterministic.
+- Every packaged PHP file passed php -l.
+- Payload, migration, and health-check SHA-256 validation passed.
+- Managed updater preflight schema emulation passed.
 - ZIP archive integrity passed.
-- No database credentials, customer records, uploads, payments, API keys, or protected media are bundled.
 
-INSTALLATION
-------------
-1. Open Admin > Software Updates.
-2. Upload {package_path.name}.
-3. Confirm current version is at least 1.9.9 and target version is 2.1.0.
-4. Choose Back Up & Apply.
-5. Confirm all post-install health checks pass.
-6. Open Admin > Pricing Manager.
-7. Change one package or equipment price and save.
-8. Confirm that price in Packages, System Builder, cart, and checkout.
-
-A live production installation, checkout, or payment was not performed during packaging.
+Discard the rejected 2.1.0 stage and upload this 2.1.1 package through Admin > Software Updates.
+A live production installation, checkout, payment, or database migration was not performed during packaging.
 """
-    (DIST / "klevr-2.1.0-implementation-report.txt").write_text(report, encoding="utf-8")
+    (DIST / "klevr-2.1.1-preflight-fix-report.txt").write_text(report, encoding="utf-8")
 
 
 def main() -> None:
     validate_php()
     manifest = build_manifest()
+    validate_preflight_schema(manifest)
     package_path, digest = build_archive()
     write_report(package_path, digest, manifest)
     print(digest)
