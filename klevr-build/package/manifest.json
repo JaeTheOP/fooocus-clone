@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "package_id": "klevr-equipment-price-reduction",
-  "version": "2.0.0",
+  "package_id": "klevr-central-pricing-manager",
+  "version": "2.1.0",
   "minimum_version": "1.9.9",
-  "description": "Reduce all current customer-facing equipment prices by 10 percent while leaving monitoring, installation, shipping, tax, and service fees unchanged.",
+  "description": "Add a central administrator Pricing Manager for package, plan, service, installation, and customer equipment prices.",
   "payload_path": "payload",
   "requirements": {
     "php": "7.4.0",
@@ -15,17 +15,20 @@
   },
   "delete_paths": [],
   "migrations": [
-    "migrations/20260723_003_equipment_price_reduction.php"
+    "migrations/20260723_003_equipment_price_reduction.php",
+    "migrations/20260723_004_pricing_manager.php"
   ],
   "health_checks": [
-    "health/release-2.0.0.php"
+    "health/release-2.1.0.php"
   ],
   "checksums": {
-    "health/release-2.0.0.php": "1fbc47934e8c4bc2512a418294f3435b9ccd188bec8dd860efb7f1c617be2038",
-    "manifest.json": "5ba2552ee15ba42497f04da065f53823d593c2f4dc7cf0d0e7e08fdac67793b8",
+    "health/release-2.1.0.php": "58878791fe8115a84e9b7448d152aa422621313a9bc0f7b4dc37517676e78ead",
     "migrations/20260723_003_equipment_price_reduction.php": "43b40e8416366491fbea96f32875e4bafef3c92634dd3a7ac9df910f920bc799",
+    "migrations/20260723_004_pricing_manager.php": "34af951c9f64068dbd8e8e6f2a7acd8de4abeccbed02e8fa4bfdc40ccbd40075",
+    "payload/admin/pricing_manager.php": "574477875de9bdc69ff8d6ecd1b31a75e7cf6e210dd0af28ca0a061f109eb3b2",
     "payload/docs/release-2.0.0-equipment-price-reduction.md": "d8eb9ac4a1e166e8c68db699c554478ce48044f9965851777272995f0e653f42",
-    "payload/includes/app_version.php": "084549479201fec5b9f43426a4f17ac7ba30122e1dbb8fbf70149df63aae1a3b"
+    "payload/docs/release-2.1.0-pricing-manager.md": "dfb39cbf91af0745566db9f369ab6a40eab5b0f8e7e48450165f51e84e571fe0",
+    "payload/includes/app_version.php": "0678ff54067426253e6842a4c257d986f6b094aff9c552293ea1fa4c90dac5b0"
   },
-  "built_at": "2026-07-23T18:00:00Z"
+  "built_at": "2026-07-23T20:48:34Z"
 }
